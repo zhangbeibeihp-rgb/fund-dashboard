@@ -3,7 +3,7 @@
 // 策略：Cache First（核心资源）+ Network First（API请求）
 // ============================================================
 
-const CACHE_NAME = 'fund-dashboard-v1.2';
+const CACHE_NAME = 'fund-dashboard-v1.3';
 const STATIC_ASSETS = [
   './',
   './portfolio-rebalance-dashboard.html',
