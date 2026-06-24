@@ -1412,7 +1412,7 @@ li{margin-bottom:2px}
       <h2>📤 上传截图识别加减仓</h2>
       <div class="upload-area" id="uploadArea" onclick="document.getElementById('screenshotInput').click()" ondragover="event.preventDefault();this.style.borderColor='#6366f1';this.style.background='#eef2ff'" ondragleave="this.style.borderColor='#c7d2fe';this.style.background='#f8faff'" ondrop="handleFileDrop(event)" tabindex="0" role="button" aria-label="点击或拖拽上传基金App截图">
         <h3>📷 点击或拖拽上传基金App截图</h3>
-        <p>支持京东金融、支付宝、天天基金等App的交易记录截图<br>识别后自动填入下方表格，支持批量导入</p>
+        <p>支持京东金融、支付宝、天天基金等App的交易记录截图<br>自动识别基金名称、金额、日期并导入 | 基于 Tesseract.js 浏览器端 OCR</p>
         <input type="file" id="screenshotInput" accept="image/*" multiple style="display:none" onchange="handleFileSelect(event)">
       </div>
       <div id="uploadPreview" style="margin-top:12px"></div>
@@ -4673,7 +4673,7 @@ function processUploadedFiles(files){
         card.innerHTML =
           '<img src="' + base64 + '" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0" alt="截图预览">' +
           '<div style="flex:1"><div style="font-size:13px;font-weight:600;color:#1e293b">' + escapeHtml(fileName) + '</div>' +
-          '<div style="font-size:11px;color:#64748b">' + (fileSize/1024).toFixed(0) + ' KB ｜ <span class="ocr-status" style="color:#f59e0b">🔍 OCR识别中...</span></div></div>' +
+          '<div style="font-size:11px;color:#64748b">' + (fileSize/1024).toFixed(0) + ' KB ｜ <span class="ocr-status" style="color:#f59e0b">🔍 加载OCR引擎中...</span></div></div>' +
           '<span class="ocr-check" style="color:#f59e0b;font-size:18px">⏳</span>';
         preview.appendChild(card);
 
@@ -4702,13 +4702,22 @@ function processUploadedFiles(files){
 }
 
 async function callOCRApi(base64){
-  var res = await fetch('/api/ocr', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ image: base64 })
+  // 使用 Tesseract.js 浏览器端 OCR (免费、无需API Key、支持中文)
+  if(!window.Tesseract){
+    // 动态加载 Tesseract.js
+    await new Promise(function(resolve, reject){
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js';
+      s.onload = resolve; s.onerror = function(){ reject(new Error('Tesseract.js 加载失败')); };
+      document.head.appendChild(s);
+    });
+  }
+  var worker = await Tesseract.createWorker('chi_sim+eng', 1, {
+    logger: function(m){ if(m.status === 'recognizing text'){ /* silent */ } }
   });
-  var data = await res.json();
-  if(data.error) throw new Error(data.error);
-  return data.texts || [];
+  var result = await worker.recognize(base64);
+  await worker.terminate();
+  return (result.data.text || '').split('\n').filter(function(l){ return l.trim(); });
 }
 
 // 从OCR文本中提取交易记录
