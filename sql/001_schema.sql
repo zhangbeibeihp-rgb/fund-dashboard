@@ -124,15 +124,28 @@ CREATE TRIGGER trg_goals_updated BEFORE UPDATE ON goals
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ===== 8. 新用户注册时自动创建 profile =====
+-- 注：SET search_path = public 是 Supabase 官方推荐写法，避免触发器权限问题
+-- 若触发 "Database error saving new user"，还需执行以下 GRANT：
+--   GRANT INSERT ON profiles TO supabase_auth_admin;
+--   GRANT INSERT ON profiles TO anon;
+--   GRANT INSERT ON profiles TO authenticated;
 CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
 BEGIN
-  INSERT INTO profiles (id, username, age, risk_level)
-  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'username', '投资者'), 32, '稳健型')
+  INSERT INTO public.profiles (id, username, age, risk_level)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'username', '投资者'),
+    32,
+    '稳健型'
+  )
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
