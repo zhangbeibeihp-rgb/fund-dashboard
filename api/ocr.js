@@ -19,24 +19,7 @@ export default async function handler(req, res) {
     const { image } = req.body;
     if (!image) return res.status(400).json({ error: '缺少 image 参数' });
 
-    const resp = await fetch('https://api.deepseek.com/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + DEEPSEEK_API_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image_url',
-              image_url: { url: image }
-            },
-            {
-              type: 'text',
-              text: `请识别这张基金App交易记录截图，提取每一条交易记录。
+    const prompt = `请识别这张基金App交易记录截图，提取每一条交易记录。
 对每一条交易记录，提取以下信息：
 - date: 交易日期 (格式 YYYY-MM-DD)
 - fund: 基金名称
@@ -48,7 +31,26 @@ export default async function handler(req, res) {
 请严格返回 JSON 数组格式，不要任何解释文字：
 [{"date":"2026-06-15","fund":"华夏全球科技先锋","type":"申购","amount":2000,"share":1085.74,"nav":1.8421}, ...]
 
-如果找不到，返回空数组 []。`
+如果找不到，返回空数组 []。`;
+
+    const resp = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + DEEPSEEK_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'deepseek-vl-chat',
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image_url',
+              image_url: { url: image, detail: 'high' }
+            },
+            {
+              type: 'text',
+              text: prompt
             }
           ]
         }],
