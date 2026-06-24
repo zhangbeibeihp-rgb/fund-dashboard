@@ -1146,25 +1146,34 @@ li{margin-bottom:2px}
   <!-- =========================================== -->
   <div id="sec-estimate" style="display:none">
 
-    <!-- ===== 🌙 QDII 夜盘数据（自动获取美股实时指数）===== -->
-    <div class="card" style="margin-bottom:14px;border-left:4px solid #6366f1">
-      <h2>🌙 QDII 夜盘数据 · 美股实时指数行情</h2>
-      <p style="font-size:12px;color:#64748b;margin-bottom:12px">数据源：腾讯行情 qt.gtimg.cn · 用于计算今晚QDII预估盈亏</p>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px" id="nightIndexGrid">
-        <div class="us-index-card" id="usIdxNDX"><div class="us-idx-name">纳斯达克100</div><div class="us-idx-price" id="usIdxNDXPrice">--</div><div class="us-idx-change" id="usIdxNDXChange">--</div></div>
-        <div class="us-index-card" id="usIdxSPX"><div class="us-idx-name">标普500</div><div class="us-idx-price" id="usIdxSPXPrice">--</div><div class="us-idx-change" id="usIdxSPXChange">--</div></div>
-        <div class="us-index-card" id="usIdxEEM"><div class="us-idx-name">MSCI新兴市场ETF</div><div class="us-idx-price" id="usIdxEEMPrice">--</div><div class="us-idx-change" id="usIdxEEMChange">--</div></div>
-        <div class="us-index-card" id="usIdxDJI"><div class="us-idx-name">道琼斯工业</div><div class="us-idx-price" id="usIdxDJIPrice">--</div><div class="us-idx-change" id="usIdxDJIChange">--</div></div>
+    <!-- ===== 🌙 纳指估值 · QDII夜盘预估 ===== -->
+    <div class="card" style="margin-bottom:14px;border-left:4px solid #6366f1;background:linear-gradient(135deg,#fafbff,#f5f3ff)">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <h2>🌙 纳指估值 · QDII夜盘预估 <span style="font-size:11px;color:#a855f7;font-weight:400" id="nightRefreshCountdown"></span></h2>
+        <div style="display:flex;gap:6px">
+          <button class="premarket-calc-btn" id="nightAutoBtn" onclick="toggleNightAuto()" style="font-size:12px;padding:5px 12px;background:#3b82f6">⏱️ 开始自动刷新</button>
+          <button class="premarket-calc-btn" onclick="doNightRefresh()" style="font-size:12px;padding:5px 12px;background:#6366f1">🔄 手动刷新</button>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
-        <span style="font-size:11px;color:#94a3b8" id="nightIdxTime">⏳ 等待获取...</span>
-        <button class="premarket-calc-btn" onclick="fetchNightIndexData()" style="font-size:12px;padding:6px 14px">🔄 刷新美股指数</button>
-        <button class="premarket-calc-btn" id="nightEstBtn" onclick="calcNightEstimate()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);font-size:12px;padding:6px 14px">🧮 计算今晚QDII预估盈亏</button>
-        <span style="font-size:10px;color:#d97706;margin-left:auto">💡 需美股盘中才能刷新实时数据</span>
+      <p style="font-size:11px;color:#94a3b8;margin-bottom:4px">数据源：腾讯 qt.gtimg.cn · 每30秒自动刷新 · 参考「纳指估值」小程序</p>
+
+      <!-- 美股指数行情 -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:10px" id="nightIndexGrid">
+        <div class="us-index-card" id="usIdxNDX" style="border:1.5px solid #dbeafe"><div class="us-idx-name">纳斯达克100</div><div class="us-idx-price" id="usIdxNDXPrice">--</div><div class="us-idx-change" id="usIdxNDXChange">--</div></div>
+        <div class="us-index-card" id="usIdxSPX" style="border:1.5px solid #dbeafe"><div class="us-idx-name">标普500</div><div class="us-idx-price" id="usIdxSPXPrice">--</div><div class="us-idx-change" id="usIdxSPXChange">--</div></div>
+        <div class="us-index-card" id="usIdxEEM" style="border:1.5px solid #dbeafe"><div class="us-idx-name">MSCI新兴市场ETF</div><div class="us-idx-price" id="usIdxEEMPrice">--</div><div class="us-idx-change" id="usIdxEEMChange">--</div></div>
+        <div class="us-index-card" id="usIdxDJI" style="border:1.5px solid #dbeafe"><div class="us-idx-name">道琼斯工业</div><div class="us-idx-price" id="usIdxDJIPrice">--</div><div class="us-idx-change" id="usIdxDJIChange">--</div></div>
       </div>
-      <div id="nightEstResult" style="display:none;margin-top:10px;padding:10px 14px;background:linear-gradient(135deg,#faf5ff,#f5f3ff);border-radius:8px;border:1px solid #e9d5ff">
-        <span style="font-weight:700;color:#7c3aed" id="nightEstText"></span>
-        <span style="font-size:11px;color:#a855f7;margin-left:8px" id="nightEstTime"></span>
+      <div style="font-size:10px;color:#94a3b8;margin-bottom:10px" id="nightIdxTime">⏳ 等待获取...</div>
+
+      <!-- QDII基金夜盘估值表 -->
+      <div id="nightFundTable" style="display:none">
+        <div style="font-size:12px;font-weight:700;color:#7c3aed;margin-bottom:6px">📊 各QDII基金夜盘预估</div>
+        <div class="table-wrap" style="max-height:350px">
+          <table style="font-size:12px"><thead><tr>
+            <th>基金名称</th><th>参考指数</th><th>指数涨跌</th><th>持仓金额</th><th style="color:#a855f7">预估盈亏</th><th style="color:#a855f7">预估金额</th>
+          </tr></thead><tbody id="nightFundBody"></tbody></table>
+        </div>
       </div>
     </div>
 
@@ -3116,62 +3125,83 @@ function renderEstimate(){
       : `暂无 A股 持仓`;
 }
 
-// ===== 🌙 获取夜盘美股指数数据 =====
+// ===== 🌙 纳指估值 · QDII夜盘预估 =====
+let nightAutoTimer = null;
+let nightCountdown = 0;
+
 function fetchNightIndexData(){
   document.getElementById('nightIdxTime').textContent = '⏳ 获取中...';
-  fetchUSIndexData().then(() => {
+  return fetchUSIndexData().then(() => {
     const times = Object.values(US_INDEX_MAP).filter(i => i.time).map(i => i.time);
     const latest = times.sort().pop();
     document.getElementById('nightIdxTime').textContent = latest
       ? `📡 数据时间：${latest}（美东最近收盘）`
       : '⚠️ 未获取到实时数据（可能非交易时段）';
+    // 自动计算估值
+    calcNightEstimate();
   }).catch(() => {
     document.getElementById('nightIdxTime').textContent = '❌ 获取失败，请检查网络';
   });
 }
 
-// ===== 🧮 计算今晚QDII预估盈亏（基于夜盘指数）=====
 function calcNightEstimate(){
   const qdiiFunds = funds.filter(f => f.market === 'us');
-  if (qdiiFunds.length === 0) {
-    showToast('⚠️ 没有QDII持仓', 'error');
-    return;
-  }
+  if (qdiiFunds.length === 0) return;
 
-  let totalEst = 0;
-  qdiiFunds.forEach(f => {
+  let totalEst = 0, totalAmount = 0;
+  const rows = qdiiFunds.map(f => {
     const idxKey = Object.keys(US_INDEX_MAP).find(k => US_INDEX_MAP[k].ref === f.ref);
-    let changePct = 0;
-    if (idxKey && US_INDEX_MAP[idxKey].changePct !== 0) {
-      changePct = US_INDEX_MAP[idxKey].changePct;
-    } else {
-      changePct = f.estChange || 0;
-    }
-    totalEst += f.amount * changePct / 100;
-  });
+    let changePct = idxKey && US_INDEX_MAP[idxKey].changePct !== 0
+      ? US_INDEX_MAP[idxKey].changePct : (f.estChange || 0);
+    const estProfit = f.amount * changePct / 100;
+    totalEst += estProfit; totalAmount += f.amount;
+    const idxName = idxKey ? US_INDEX_MAP[idxKey].label : (f.ref || '--');
+    const sign = changePct >= 0 ? '+' : '';
+    const profitSign = estProfit >= 0 ? '+' : '';
+    return `<tr>
+      <td style="font-weight:600;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</td>
+      <td style="font-size:11px;color:#3b82f6">${idxName}</td>
+      <td style="font-weight:600;color:${changePct>=0?'#dc2626':'#16a34a'}">${sign}${changePct.toFixed(2)}%</td>
+      <td>¥${f.amount.toFixed(2)}</td>
+      <td style="font-weight:700;color:${estProfit>=0?'#a855f7':'#16a34a'}">${profitSign}¥${Math.abs(estProfit).toFixed(2)}</td>
+      <td>¥${(f.amount+estProfit).toFixed(2)}</td>
+    </tr>`;
+  }).join('');
 
-  const qdiiTotal = qdiiFunds.reduce((s,f) => s + f.amount, 0);
-  const rateVal = qdiiTotal > 0 ? (totalEst / qdiiTotal * 100) : 0;
-  const sign = totalEst >= 0 ? '+' : '';
+  document.getElementById('nightFundBody').innerHTML = rows;
+  document.getElementById('nightFundTable').style.display = 'block';
 
-  document.getElementById('nightEstResult').style.display = 'block';
-  document.getElementById('nightEstText').textContent =
-    `💫 今晚QDII预估盈亏：${sign}¥${Math.abs(totalEst).toFixed(2)}（${sign}${rateVal.toFixed(2)}%）`;
-  document.getElementById('nightEstTime').textContent =
-    `基于最新美股指数涨跌 · 总持仓 ¥${qdiiTotal.toFixed(2)}`;
-
-  // 同时更新 KPI 卡片
+  // 更新KPI
+  const rate = totalAmount > 0 ? totalEst / totalAmount * 100 : 0;
   const kpiEl = document.getElementById('kpiQdiiEst');
   const kpiSub = document.getElementById('kpiQdiiSub');
-  if (kpiEl) {
-    kpiEl.textContent = `${sign}¥${Math.abs(totalEst).toFixed(2)}`;
-    kpiEl.style.color = totalEst >= 0 ? '#a855f7' : '#16a34a';
-  }
-  if (kpiSub) {
-    kpiSub.textContent = `${sign}${rateVal.toFixed(2)}% · 共${qdiiFunds.length}支QDII`;
-  }
+  if (kpiEl) { kpiEl.textContent = `${totalEst>=0?'+':''}¥${Math.abs(totalEst).toFixed(2)}`; kpiEl.style.color = totalEst >= 0 ? '#a855f7' : '#16a34a'; }
+  if (kpiSub) kpiSub.textContent = `${rate>=0?'+':''}${rate.toFixed(2)}% · ${qdiiFunds.length}支QDII`;
+}
 
-  showToast(`🌙 今晚QDII预估：${sign}¥${Math.abs(totalEst).toFixed(2)}（${sign}${rateVal.toFixed(2)}%）`, 'success');
+// ===== 自动刷新 =====
+function doNightRefresh(){ fetchNightIndexData(); }
+
+function toggleNightAuto(){
+  const btn = document.getElementById('nightAutoBtn');
+  if(nightAutoTimer){
+    clearInterval(nightAutoTimer); clearInterval(nightCountdown);
+    nightAutoTimer = null; nightCountdown = 0;
+    btn.textContent = '⏱️ 开始自动刷新'; btn.style.background = '#3b82f6';
+    document.getElementById('nightRefreshCountdown').textContent = '';
+  } else {
+    doNightRefresh();
+    nightCountdown = 30;
+    document.getElementById('nightRefreshCountdown').textContent = `· ${nightCountdown}s后刷新`;
+    nightAutoTimer = setInterval(() => {
+      if(nightCountdown <= 0){ doNightRefresh(); nightCountdown = 30; }
+      else {
+        document.getElementById('nightRefreshCountdown').textContent = `· ${nightCountdown}s后刷新`;
+        nightCountdown--;
+      }
+    }, 1000);
+    btn.textContent = '⏹️ 停止刷新'; btn.style.background = '#ef4444';
+  }
 }
 
 // ===== 打开预估Tab时自动刷新指数 =====
