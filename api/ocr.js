@@ -1,6 +1,7 @@
-// Vercel Serverless Function — DeepSeek Vision OCR 代理
-// 需在 Vercel 环境变量中设置 DEEPSEEK_API_KEY
-// POST { image: "base64 data URL..." }
+// Vercel Serverless Function — OCR 识别代理
+// 使用 OCR.space 免费 API 识别图片中的文字
+// 免费额度：500次/天，无需注册也可以使用（但建议注册获取更高额度）
+// 注册地址：https://ocr.space/ocrapi
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -10,69 +11,43 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: '仅支持 POST' });
 
-  const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
-  if (!DEEPSEEK_API_KEY) {
-    return res.status(500).json({ error: '请在 Vercel 环境变量中设置 DEEPSEEK_API_KEY' });
-  }
-
   try {
     const { image } = req.body;
     if (!image) return res.status(400).json({ error: '缺少 image 参数' });
 
-    const prompt = `请识别这张基金App交易记录截图，提取每一条交易记录。
-对每一条交易记录，提取以下信息：
-- date: 交易日期 (格式 YYYY-MM-DD)
-- fund: 基金名称
-- type: 交易类型（申购/赎回/买入/卖出）
-- amount: 交易金额（纯数字，不含货币符号）
-- share: 份额（纯数字）
-- nav: 确认净值（纯数字）
+    // 去掉 data:image/...;base64, 前缀
+    const base64 = image.replace(/^data:image\/\w+;base64,/, '');
 
-请严格返回 JSON 数组格式，不要任何解释文字：
-[{"date":"2026-06-15","fund":"华夏全球科技先锋","type":"申购","amount":2000,"share":1085.74,"nav":1.8421}, ...]
+    // OCR.space 免费 API
+    const formData = new URLSearchParams();
+    formData.append('base64Image', 'data:image/png;base64,' + base64);
+    formData.append('language', 'chs'); // 中文简体
+    formData.append('isOverlayRequired', 'false');
+    formData.append('OCREngine', '2'); // 使用引擎2（更准确）
 
-如果找不到，返回空数组 []。`;
-
-    const resp = await fetch('https://api.deepseek.com/chat/completions', {
+    const resp = await fetch('https://api.ocr.space/parse/image', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + DEEPSEEK_API_KEY,
-        'Content-Type': 'application/json'
+        'apikey': 'K81918549688957', // OCR.space 免费 key，无需注册即可使用
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: JSON.stringify({
-        model: 'deepseek-vl-chat',
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image_url',
-              image_url: { url: image, detail: 'high' }
-            },
-            {
-              type: 'text',
-              text: prompt
-            }
-          ]
-        }],
-        temperature: 0.1,
-        max_tokens: 2000
-      })
+      body: formData.toString()
     });
 
     const data = await resp.json();
-    if (data.error) return res.status(400).json({ error: data.error.message || 'DeepSeek API 错误' });
 
-    // 解析 DeepSeek 返回的 JSON
-    const content = data.choices?.[0]?.message?.content || '[]';
-    const cleaned = content.replace(/```json\n?|```/g, '').trim();
-
-    try {
-      const trades = JSON.parse(cleaned);
-      return res.status(200).json({ trades, count: trades.length });
-    } catch {
-      // 如果解析失败，返回原始文本
-      return res.status(200).json({ trades: [], rawText: content, count: 0 });
+    if (data.IsErroredOnProcessing || !data.ParsedResults) {
+      return res.status(400).json({ error: data.ErrorMessage || 'OCR 识别失败' });
     }
+
+    // 提取所有识别到的文字行
+    const texts = [];
+    data.ParsedResults.forEach(result => {
+      const lines = (result.ParsedText || '').split('\r\n').filter(l => l.trim());
+      lines.forEach(line => texts.push(line.trim()));
+    });
+
+    return res.status(200).json({ texts, count: texts.length });
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
