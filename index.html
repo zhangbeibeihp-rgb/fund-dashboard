@@ -31,6 +31,16 @@ body {
   animation: spin .7s linear infinite;
   margin: 1.5rem auto 0;
 }
+.error-msg {
+  margin-top: 1.5rem;
+  background: rgba(239,68,68,.15);
+  border: 1px solid rgba(239,68,68,.3);
+  color: #fca5a5;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: .9rem;
+  display: none;
+}
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 </style>
@@ -40,26 +50,33 @@ body {
   <h1>📊 基金组合管理仪表盘</h1>
   <p>加载中，请稍候…</p>
   <div class="spinner"></div>
+  <div class="error-msg" id="errorMsg"></div>
 </div>
 
-<script type="module">
-// 引入 Supabase 客户端判断登录状态
-import { supabase } from './src/supabase.js';
-
-async function go() {
+<script src="src/config.js"></script>
+<script src="src/supabase.js"></script>
+<script>
+(async function() {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const client = await initSupabase();
+    if (!client) {
+      document.getElementById('errorMsg').textContent = '数据库连接失败，请检查 config.js 配置';
+      document.getElementById('errorMsg').style.display = 'block';
+      return;
+    }
+    const { data: { session }, error } = await client.auth.getSession();
+    if (error) throw error;
     if (session) {
       location.replace('portfolio-rebalance-dashboard.html');
     } else {
       location.replace('login.html');
     }
-  } catch {
-    // 网络错误等降级到登录页
-    location.replace('login.html');
+  } catch (e) {
+    console.error('[Index] 跳转失败:', e);
+    document.getElementById('errorMsg').textContent = '认证检查失败: ' + e.message;
+    document.getElementById('errorMsg').style.display = 'block';
   }
-}
-go();
+})();
 </script>
 </body>
 </html>
