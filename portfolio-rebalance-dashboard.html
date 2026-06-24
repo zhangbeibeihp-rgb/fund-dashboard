@@ -1168,6 +1168,23 @@ li{margin-bottom:2px}
       </div>
     </div>
 
+    <!-- ===== 🌏 QDII 亚盘数据 ===== -->
+    <div class="card" style="margin-bottom:14px;border-left:4px solid #f59e0b">
+      <h2>🌏 QDII 亚盘数据 · 亚太市场实时指数</h2>
+      <p style="font-size:12px;color:#64748b;margin-bottom:12px">数据源：腾讯行情 qt.gtimg.cn · 覆盖港股/日股/韩股等亚太市场</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px" id="asiaIndexGrid">
+        <div class="us-index-card" id="asiaIdxHSI"><div class="us-idx-name">恒生指数</div><div class="us-idx-price" id="asiaHSIPrice">--</div><div class="us-idx-change" id="asiaHSIChange">--</div></div>
+        <div class="us-index-card" id="asiaIdxN225"><div class="us-idx-name">日经225</div><div class="us-idx-price" id="asiaN225Price">--</div><div class="us-idx-change" id="asiaN225Change">--</div></div>
+        <div class="us-index-card" id="asiaIdxKS11"><div class="us-idx-name">韩国KOSPI</div><div class="us-idx-price" id="asiaKS11Price">--</div><div class="us-idx-change" id="asiaKS11Change">--</div></div>
+        <div class="us-index-card" id="asiaIdxSTI"><div class="us-idx-name">新加坡海峡</div><div class="us-idx-price" id="asiaSTIPrice">--</div><div class="us-idx-change" id="asiaSTIChange">--</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap">
+        <span style="font-size:11px;color:#94a3b8" id="asiaIdxTime">⏳ 等待获取...</span>
+        <button class="premarket-calc-btn" onclick="fetchAsiaIndexData()" style="font-size:12px;padding:6px 14px;background:#f59e0b">🔄 刷新亚盘指数</button>
+        <span style="font-size:10px;color:#d97706;margin-left:auto">💡 亚盘交易时段：港股 09:30-16:00 / 日股 08:00-14:00（北京时间）</span>
+      </div>
+    </div>
+
     <!-- ===== 🇺🇸 QDII：T+1 收益刷新前预估 ===== -->
     <div class="card" style="margin-bottom:14px;border-left:4px solid #3b82f6">
       <h2>🇺🇸 QDII · T+1 收益刷新前预估</h2>
@@ -1367,6 +1384,21 @@ li{margin-bottom:2px}
   <!-- =========================================== -->
   <div id="sec-trades" style="display:none">
     <div class="section-title">📝 加减仓交易记录</div>
+
+    <!-- 快速添加交易 -->
+    <div class="card" style="margin-bottom:14px;border-left:4px solid #22c55e">
+      <h2>➕ 快速添加交易记录</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+        <div class="form-group"><label class="form-label" style="font-size:12px;font-weight:600;color:#475569">基金名称</label><input id="tradeFundName" class="form-input" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px" placeholder="如：华夏全球科技先锋(QDII)A"></div>
+        <div class="form-group"><label class="form-label" style="font-size:12px;font-weight:600;color:#475569">交易日期</label><input id="tradeDate" type="date" class="form-input" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px"></div>
+        <div class="form-group"><label class="form-label" style="font-size:12px;font-weight:600;color:#475569">操作类型</label><select id="tradeAction" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px"><option value="buy">买入</option><option value="sell">卖出</option></select></div>
+        <div class="form-group"><label class="form-label" style="font-size:12px;font-weight:600;color:#475569">基金分类</label><select id="tradeFtype" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px"><option value="mixed">混合型</option><option value="index">指数型</option><option value="stock">股票型</option></select></div>
+        <div class="form-group"><label class="form-label" style="font-size:12px;font-weight:600;color:#475569">交易金额（元）</label><input id="tradeAmount" type="number" step="0.01" class="form-input" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px" placeholder="如：2000"></div>
+        <div class="form-group"><label class="form-label" style="font-size:12px;font-weight:600;color:#475569">份额</label><input id="tradeShare" type="number" step="0.01" class="form-input" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px" placeholder="如：1085.54"></div>
+        <div class="form-group"><label class="form-label" style="font-size:12px;font-weight:600;color:#475569">确认净值</label><input id="tradeNav" type="number" step="0.0001" class="form-input" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px" placeholder="如：1.8421"></div>
+        <div class="form-group" style="display:flex;align-items:flex-end"><button onclick="addTrade()" style="width:100%;padding:10px;background:#22c55e;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">✅ 确认添加</button></div>
+      </div>
+    </div>
     <div class="card" style="margin-bottom:16px">
       <h2>📤 上传截图识别加减仓</h2>
       <div class="upload-area" id="uploadArea" onclick="document.getElementById('screenshotInput').click()" ondragover="event.preventDefault();this.style.borderColor='#6366f1';this.style.background='#eef2ff'" ondragleave="this.style.borderColor='#c7d2fe';this.style.background='#f8faff'" ondrop="handleFileDrop(event)" tabindex="0" role="button" aria-label="点击或拖拽上传基金App截图">
@@ -1391,7 +1423,7 @@ li{margin-bottom:2px}
       <div class="table-wrap" style="max-height:350px">
         <table>
           <thead><tr>
-            <th>日期</th><th>基金名称</th><th>类型</th><th>基金分类</th><th>金额</th><th>份额</th><th>净值</th><th>状态</th>
+            <th>日期</th><th>基金名称</th><th>类型</th><th>基金分类</th><th>金额</th><th>份额</th><th>净值</th><th>状态</th><th></th>
           </tr></thead>
           <tbody id="tradeBody"></tbody>
         </table>
@@ -1407,32 +1439,7 @@ li{margin-bottom:2px}
       </div>
       <div class="card">
         <h2>🔄 操作时间线</h2>
-        <div class="timeline">
-          <div class="timeline-item buy">
-            <div class="timeline-dot"></div>
-            <div class="timeline-date">2026-06-15</div>
-            <div class="timeline-title">申购 华夏全球科技先锋(QDII)A</div>
-            <div class="timeline-desc">+¥2,000 ｜ 净值 1.8421 ｜ 已确认</div>
-          </div>
-          <div class="timeline-item buy">
-            <div class="timeline-dot"></div>
-            <div class="timeline-date">2026-06-10</div>
-            <div class="timeline-title">申购 华夏移动互联混合(QDII)</div>
-            <div class="timeline-desc">+¥1,500 ｜ 净值 2.1053 ｜ 已确认</div>
-          </div>
-          <div class="timeline-item buy">
-            <div class="timeline-dot"></div>
-            <div class="timeline-date">2026-06-05</div>
-            <div class="timeline-title">申购 广发全球精选股票(QDII)A</div>
-            <div class="timeline-desc">+¥1,000 ｜ 净值 3.2156 ｜ 已确认</div>
-          </div>
-          <div class="timeline-item rebalance">
-            <div class="timeline-dot"></div>
-            <div class="timeline-date">2026-06-23（计划）</div>
-            <div class="timeline-title">🔄 再平衡第一批</div>
-            <div class="timeline-desc">赎回3支低收益QDII → 货币基金/债券基金</div>
-          </div>
-        </div>
+        <div class="timeline" id="tradeTimeline"></div>
       </div>
     </div>
   </div>
@@ -3169,28 +3176,167 @@ function calcNightEstimate(){
 
 // ===== 打开预估Tab时自动刷新指数 =====
 document.addEventListener('DOMContentLoaded', function() {
-  // Hijack showSection to auto-refresh night index when estimate tab is opened
+  loadTradesData();
+  // Hijack showSection to auto-refresh indices when estimate tab is opened
   const _origShowSection = showSection;
   showSection = function(name) {
     _origShowSection(name);
     if (name === 'estimate') {
       setTimeout(fetchNightIndexData, 300);
+      setTimeout(fetchAsiaIndexData, 600);
     }
   };
 });
 
+// ===== 🌏 获取亚盘指数数据 =====
+const ASIA_INDEX_MAP = {
+  'hkHSI': { label: '恒生指数', priceId: 'asiaHSIPrice', changeId: 'asiaHSIChange', price: 0, change: 0, changePct: 0, time: '' },
+  'jpN225': { label: '日经225', priceId: 'asiaN225Price', changeId: 'asiaN225Change', price: 0, change: 0, changePct: 0, time: '' },
+  'krKS11': { label: '韩国KOSPI', priceId: 'asiaKS11Price', changeId: 'asiaKS11Change', price: 0, change: 0, changePct: 0, time: '' },
+  'sgSTI': { label: '新加坡海峡', priceId: 'asiaSTIPrice', changeId: 'asiaSTIChange', price: 0, change: 0, changePct: 0, time: '' }
+};
+
+function fetchAsiaIndexData(){
+  document.getElementById('asiaIdxTime').textContent = '⏳ 获取中...';
+  const codes = Object.keys(ASIA_INDEX_MAP);
+  const url = `https://qt.gtimg.cn/q=${codes.join(',')}`;
+  const script = document.createElement('script');
+  let received = 0, settled = false;
+
+  const cleanup = () => { codes.forEach(c => { delete window['v_'+c]; }); if(script.parentNode) script.parentNode.removeChild(script); };
+  const done = () => { if(!settled){ settled = true; cleanup(); } };
+
+  codes.forEach(code => {
+    Object.defineProperty(window, 'v_'+code, {
+      set(val){
+        const idx = ASIA_INDEX_MAP[code];
+        if(!idx) return;
+        try {
+          const parts = val.split('~');
+          if(parts.length < 33) return;
+          idx.price = parseFloat(parts[3]) || 0;
+          idx.change = parseFloat(parts[31]) || 0;
+          idx.changePct = parseFloat(parts[32]) || 0;
+          idx.time = parts[30] || '';
+
+          const priceEl = document.getElementById(idx.priceId);
+          const changeEl = document.getElementById(idx.changeId);
+          if(priceEl) priceEl.textContent = idx.price > 0 ? idx.price.toFixed(2) : '--';
+          if(changeEl){
+            const dir = idx.changePct > 0 ? 'up' : idx.changePct < 0 ? 'down' : 'flat';
+            changeEl.textContent = `${idx.changePct>=0?'+':''}${idx.changePct.toFixed(2)}%`;
+            changeEl.className = 'us-idx-change ' + dir;
+          }
+        } catch(e){}
+        received++;
+        if(received >= codes.length) done();
+      }, get(){ return ''; }, configurable: true
+    });
+  });
+
+  script.src = url;
+  script.onload = () => { setTimeout(() => {
+    const times = Object.values(ASIA_INDEX_MAP).filter(i => i.time).map(i => i.time);
+    document.getElementById('asiaIdxTime').textContent = times.length > 0
+      ? `📡 数据时间：${times.sort().pop()}`
+      : '⚠️ 未获取到实时数据（可能非交易时段）';
+    done();
+  }, 300); };
+  script.onerror = () => { document.getElementById('asiaIdxTime').textContent = '❌ 获取失败'; done(); };
+  setTimeout(() => { document.getElementById('asiaIdxTime').textContent = '⚠️ 超时（可能非交易时段）'; done(); }, 8000);
+  document.body.appendChild(script);
+}
+
 // ===== 渲染交易记录 =====
 function renderTrades(){
-  document.getElementById('tradeBody').innerHTML = trades.map(t=>`
-    <tr>
+  document.getElementById('tradeBody').innerHTML = trades.map((t,i)=>{
+    const isSell = t.action === 'sell' || t.type === '赎回';
+    const displayAction = t.action === 'buy' ? '买入' : t.action === 'sell' ? '卖出' : (t.type || '--');
+    const ftype = t.ftype || 'mixed';
+    return `<tr>
       <td>${t.date}</td><td>${t.fund}</td>
-      <td><span class="tag tag-buy">${t.type}</span></td>
-      <td><span class="tag ${typeTagClass[t.ftype]}">${typeLabel[t.ftype]}</span></td>
-      <td class="green">+¥${t.amount.toFixed(2)}</td>
-      <td class="gray">${t.share.toFixed(2)}</td>
-      <td>${t.nav.toFixed(4)}</td>
-      <td><span class="tag tag-hold">${t.status}</span></td>
-    </tr>`).join('');
+      <td><span class="tag tag-buy">${displayAction}</span></td>
+      <td><span class="tag ${typeTagClass[ftype]}">${typeLabel[ftype]}</span></td>
+      <td class="${isSell?'green':''}">${isSell?'':''}¥${t.amount.toFixed(2)}</td>
+      <td class="gray">${(t.share||0).toFixed(2)}</td>
+      <td>${(t.nav||0).toFixed(4)}</td>
+      <td><span class="tag tag-hold">${t.status||'已确认'}</span></td>
+      <td><button onclick="deleteTrade(${i})" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:14px" title="删除">🗑️</button></td>
+    </tr>`;
+  }).join('');
+  renderTradeTimeline();
+  saveTradesData();
+  updateKPIs();
+}
+
+// ===== 删除交易记录 =====
+function deleteTrade(index){
+  if (!confirm('确定删除这条交易记录？')) return;
+  trades.splice(index, 1);
+  renderTrades();
+  showToast('🗑️ 已删除交易记录', 'info');
+}
+
+// ===== 保存交易数据 =====
+function saveTradesData(){
+  try {
+    localStorage.setItem('fund_trades', JSON.stringify(trades));
+  } catch(e){}
+}
+
+// ===== 加载交易数据 =====
+function loadTradesData(){
+  try {
+    const saved = localStorage.getItem('fund_trades');
+    if(saved){ trades = JSON.parse(saved); }
+  } catch(e){}
+}
+
+// ===== 新增交易记录 =====
+function addTrade(){
+  const fund = document.getElementById('tradeFundName').value.trim();
+  const date = document.getElementById('tradeDate').value;
+  const action = document.getElementById('tradeAction').value;
+  const amount = parseFloat(document.getElementById('tradeAmount').value) || 0;
+  const share = parseFloat(document.getElementById('tradeShare').value) || 0;
+  const nav = parseFloat(document.getElementById('tradeNav').value) || 0;
+  const ftype = document.getElementById('tradeFtype').value;
+
+  if(!fund || !date || !amount){ showToast('⚠️ 请填写基金名称、日期和金额', 'error'); return; }
+
+  trades.unshift({
+    date: date, fund: fund,
+    type: action==='buy'?'买入':'卖出',
+    action: action, ftype: ftype,
+    amount: amount, share: share, nav: nav,
+    status: '已确认', note: ''
+  });
+
+  renderTrades();
+  // 清空表单
+  ['tradeFundName','tradeDate','tradeAmount','tradeShare','tradeNav'].forEach(id => {document.getElementById(id).value = '';});
+  document.getElementById('tradeFtype').value = 'mixed';
+  document.getElementById('tradeAction').value = 'buy';
+  showToast('✅ 已添加交易记录', 'success');
+}
+
+// ===== 渲染交易时间线 =====
+function renderTradeTimeline(){
+  const tl = document.getElementById('tradeTimeline');
+  if(!tl) return;
+  const sorted = [...trades].sort((a,b) => b.date.localeCompare(a.date));
+  tl.innerHTML = sorted.slice(0,10).map(t => {
+    const cls = t.action === 'buy' ? 'buy' : t.action === 'sell' ? 'sell' : 'rebalance';
+    const isSell = t.action === 'sell' || t.type === '赎回';
+    const sign = isSell ? '-' : '+';
+    const displayAction = t.action === 'buy' ? '买入' : t.action === 'sell' ? '卖出' : (t.type || '申购');
+    return `<div class="timeline-item ${cls}">
+      <div class="timeline-dot"></div>
+      <div class="timeline-date">${t.date}</div>
+      <div class="timeline-title">${displayAction} ${t.fund}</div>
+      <div class="timeline-desc">${sign}¥${t.amount.toFixed(2)} ｜ 净值 ${(t.nav||0).toFixed(4)} ｜ ${t.status||'已确认'}</div>
+    </div>`;
+  }).join('');
 }
 
 // ===== 渲染风格对比 =====
