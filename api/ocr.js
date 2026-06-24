@@ -1,4 +1,5 @@
-// Vercel Serverless Function — AI Vision OCR 代理
+// Vercel Serverless Function — AI OCR 代理
+// 使用 gemai.cc 代理的 deepseek-ocr 模型进行图片识别
 // POST { image: "base64 data URL..." }
 // 返回识别后的交易记录
 
@@ -17,6 +18,7 @@ export default async function handler(req, res) {
     const { image } = req.body;
     if (!image) return res.status(400).json({ error: '缺少 image 参数' });
 
+    // 使用 deepseek-ocr 模型（专门优化 OCR）
     const resp = await fetch(AI_URL, {
       method: 'POST',
       headers: {
@@ -24,36 +26,36 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'deepseek-ocr',
         messages: [{
           role: 'user',
           content: [
             {
               type: 'image_url',
-              image_url: { url: image, detail: 'high' }
+              image_url: { url: image }
             },
             {
               type: 'text',
-              text: `请识别这张基金App交易记录截图，提取每一条交易记录。
-对每一条提取：
-- date: 交易日期 (格式 YYYY-MM-DD)
-- fund: 基金名称
-- type: 申购/赎回
-- action: buy/sell
-- amount: 交易金额（纯数字）
-- share: 份额（纯数字）
-- nav: 确认净值（纯数字）
-- ftype: 基金类型 mixed/index/stock
+              text: `Extract all transaction records from this fund trading screenshot.
+For each record, return:
+- date: transaction date (YYYY-MM-DD)
+- fund: fund name (Chinese)
+- type: 申购 or 赎回
+- action: buy or sell
+- amount: transaction amount (number, no ¥ symbol)
+- share: shares (number)
+- nav: confirmed NAV (number)
+- ftype: mixed, index, or stock
 - status: 已确认
 
-严格返回 JSON 数组，不要解释：
+Return ONLY a JSON array, no explanation:
 [{"date":"2026-06-15","fund":"华夏全球科技先锋","type":"申购","action":"buy","amount":2000,"share":1085.74,"nav":1.8421,"ftype":"mixed","status":"已确认"}]
 
-找不到返回 []。`
+Return [] if no records found.`
             }
           ]
         }],
-        temperature: 0.1,
+        temperature: 0,
         max_tokens: 2000
       })
     });
@@ -61,7 +63,7 @@ export default async function handler(req, res) {
     const data = await resp.json();
 
     if (data.error) {
-      return res.status(400).json({ error: data.error.message || 'AI API 错误' });
+      return res.status(400).json({ error: data.error.message || 'API 错误' });
     }
 
     const content = (data.choices?.[0]?.message?.content || '[]').trim();
@@ -73,7 +75,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ trades, count: trades.length });
       }
     } catch {
-      // JSON 解析失败，返回原始文本
+      // JSON 解析失败
     }
 
     return res.status(200).json({ trades: [], rawText: content, count: 0 });
