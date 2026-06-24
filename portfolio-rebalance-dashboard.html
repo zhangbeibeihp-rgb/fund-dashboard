@@ -4665,24 +4665,80 @@ function processUploadedFiles(files){
     }
     validFiles.push(f);
     var reader = new FileReader();
-    reader.onload = (function(fileName, fileSize){
+    reader.onload = (function(fileName, fileSize, fileObj){
       return function(e){
+        var base64 = e.target.result;
         var card = document.createElement('div');
         card.style.cssText = 'display:flex;gap:12px;align-items:center;background:#f8faff;border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid #e2e8f0';
         card.innerHTML =
-          '<img src="' + e.target.result + '" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0" alt="截图预览">' +
+          '<img src="' + base64 + '" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0" alt="截图预览">' +
           '<div style="flex:1"><div style="font-size:13px;font-weight:600;color:#1e293b">' + escapeHtml(fileName) + '</div>' +
-          '<div style="font-size:11px;color:#64748b">' + (fileSize/1024).toFixed(0) + ' KB ｜ 已上传</div>' +
-          '<div style="font-size:11px;color:#f59e0b;margin-top:2px">⏳ OCR识别功能需接入后端API，当前仅预览</div></div>' +
-          '<span style="color:#22c55e;font-size:18px">✓</span>';
+          '<div style="font-size:11px;color:#64748b">' + (fileSize/1024).toFixed(0) + ' KB ｜ <span class="ocr-status" style="color:#f59e0b">🔍 OCR识别中...</span></div></div>' +
+          '<span class="ocr-check" style="color:#f59e0b;font-size:18px">⏳</span>';
         preview.appendChild(card);
+
+        // 调用百度OCR
+        var statusEl = card.querySelector('.ocr-status');
+        var checkEl = card.querySelector('.ocr-check');
+        callOCRApi(base64).then(function(texts){
+          var trades = parseTradeText(texts);
+          statusEl.textContent = 'OCR完成 · ' + texts.length + '行 · 识别' + trades.length + '条记录';
+          statusEl.style.color = '#16a34a'; checkEl.textContent = '✓'; checkEl.style.color='#22c55e';
+          if(trades.length > 0){
+            trades.forEach(function(t){ trades.unshift(t); });
+            renderTrades();
+            showToast('✅ OCR识别成功，已导入 ' + trades.length + ' 条交易记录', 'success');
+          } else {
+            showToast('⚠️ OCR已完成，但未识别到交易记录格式，请手动填写', 'warn');
+          }
+        }).catch(function(err){
+          statusEl.textContent = 'OCR失败: ' + (err.message || '网络错误');
+          statusEl.style.color = '#ef4444'; checkEl.textContent = '✗'; checkEl.style.color='#ef4444';
+        });
       };
-    })(f.name, f.size);
+    })(f.name, f.size, f);
     reader.readAsDataURL(f);
   }
-  if(validFiles.length > 0){
-    showToast('已上传 ' + validFiles.length + ' 张截图，预览已显示\n⚠️ OCR识别功能需要后端支持，当前仅展示预览', 'info', 5000);
-  }
+}
+
+async function callOCRApi(base64){
+  var res = await fetch('/api/ocr', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ image: base64 })
+  });
+  var data = await res.json();
+  if(data.error) throw new Error(data.error);
+  return data.texts || [];
+}
+
+// 从OCR文本中提取交易记录
+function parseTradeText(texts){
+  var results = [];
+  // 常见基金App的交易记录格式：日期 基金名称 金额 份额
+  var dateRe = /\d{4}[-\/.]\d{1,2}[-\/.]\d{1,2}/;
+  var fundRe = /[华夏|广发|南方|易方达|嘉实|富国|博时|招商|汇添富|中欧|国富|建信|永赢|银华|天弘|华安|鹏华|景顺][\u4e00-\u9fa5A-Za-z()（）\d]+/;
+  var amountRe = /[¥￥]?(\d{1,3},)*\d{1,3}(\.\d{1,2})?[元万]/;
+  var shareRe = /(\d{1,3},)*\d{1,3}(\.\d{1,4})?份/;
+
+  texts.forEach(function(line, idx){
+    var date = line.match(dateRe);
+    var fund = line.match(fundRe);
+    var amountMatch = line.match(amountRe);
+
+    if(date && fund && amountMatch){
+      var amountStr = amountMatch[0].replace(/[¥￥,元万]/g, '');
+      var amount = parseFloat(amountStr) || 0;
+      if(amount > 10) { // 过滤噪声
+        results.push({
+          date: date[0].replace(/[\/.]/g, '-'),
+          fund: fund[0],
+          type: '买入', action: 'buy', ftype: 'mixed',
+          amount: amount, share: 0, nav: 0, status: '已确认', note: 'OCR自动识别'
+        });
+      }
+    }
+  });
+  return results;
 }
 
 // ===== P1-5: 数据导出/导入 =====
