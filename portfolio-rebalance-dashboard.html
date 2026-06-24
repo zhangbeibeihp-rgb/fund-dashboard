@@ -4677,22 +4677,23 @@ function processUploadedFiles(files){
           '<span class="ocr-check" style="color:#f59e0b;font-size:18px">⏳</span>';
         preview.appendChild(card);
 
-        // 调用百度OCR
+        // 调用 DeepSeek OCR
         var statusEl = card.querySelector('.ocr-status');
         var checkEl = card.querySelector('.ocr-check');
-        callOCRApi(base64).then(function(texts){
-          var trades = parseTradeText(texts);
-          statusEl.textContent = 'OCR完成 · ' + texts.length + '行 · 识别' + trades.length + '条记录';
-          statusEl.style.color = '#16a34a'; checkEl.textContent = '✓'; checkEl.style.color='#22c55e';
-          if(trades.length > 0){
-            trades.forEach(function(t){ trades.unshift(t); });
+        callOCRApi(base64).then(function(result){
+          if(result.trades){
+            result.trades.forEach(function(t){ trades.unshift(t); });
             renderTrades();
-            showToast('✅ OCR识别成功，已导入 ' + trades.length + ' 条交易记录', 'success');
+            statusEl.textContent = 'AI识别完成 · 导入' + result.trades.length + '条记录';
+            statusEl.style.color = '#16a34a'; checkEl.textContent = '✓'; checkEl.style.color='#22c55e';
+            showToast('✅ DeepSeek 识别成功，已导入 ' + result.trades.length + ' 条交易记录', 'success');
           } else {
-            showToast('⚠️ OCR已完成，但未识别到交易记录格式，请手动填写', 'warn');
+            statusEl.textContent = '未识别到交易记录格式';
+            statusEl.style.color = '#f59e0b'; checkEl.textContent = '?'; checkEl.style.color='#f59e0b';
+            showToast('⚠️ 图片已上传但未识别到交易记录，请手动填写', 'warn');
           }
         }).catch(function(err){
-          statusEl.textContent = 'OCR失败: ' + (err.message || '网络错误');
+          statusEl.textContent = '识别失败: ' + (err.message || '网络错误');
           statusEl.style.color = '#ef4444'; checkEl.textContent = '✗'; checkEl.style.color='#ef4444';
         });
       };
@@ -4702,27 +4703,23 @@ function processUploadedFiles(files){
 }
 
 async function callOCRApi(base64){
-  // 使用 Tesseract.js v5 浏览器端 OCR (免费、无需API Key、支持中文)
-  if(!window.Tesseract){
-    await new Promise(function(resolve, reject){
-      var s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-      s.onload = resolve;
-      s.onerror = function(){
-        // 备用 CDN
-        var s2 = document.createElement('script');
-        s2.src = 'https://unpkg.com/tesseract.js@5/dist/tesseract.min.js';
-        s2.onload = resolve;
-        s2.onerror = function(){ reject(new Error('Tesseract.js 加载失败，请检查网络')); };
-        document.head.appendChild(s2);
-      };
-      document.head.appendChild(s);
-    });
+  // 使用 DeepSeek Vision OCR — AI 识别基金截图，支持结构化提取
+  var res = await fetch('/api/ocr', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ image: base64 })
+  });
+  var data = await res.json();
+  if(data.error) throw new Error(data.error);
+
+  // 直接返回结构化交易记录
+  if(data.trades && data.trades.length > 0) {
+    return { trades: data.trades };
   }
-  var worker = await Tesseract.createWorker('chi_sim');
-  var result = await worker.recognize(base64);
-  await worker.terminate();
-  return (result.data.text || '').split('\n').filter(function(l){ return l.trim(); });
+  // 降级：尝试用原始文本解析
+  if(data.rawText) {
+    return { rawText: data.rawText };
+  }
+  throw new Error('未识别到交易记录');
 }
 
 // 从OCR文本中提取交易记录
