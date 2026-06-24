@@ -2,9 +2,6 @@
 // 需在 Vercel 环境变量中设置 DEEPSEEK_API_KEY
 // POST { image: "base64 data URL..." }
 
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
-if (!DEEPSEEK_API_KEY) throw new Error('请在 Vercel 环境变量中设置 DEEPSEEK_API_KEY');
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
