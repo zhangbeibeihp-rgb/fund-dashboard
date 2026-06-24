@@ -69,16 +69,26 @@ Return [] if no records found.`
     const content = (data.choices?.[0]?.message?.content || '[]').trim();
     const cleaned = content.replace(/```json\n?|```/g, '').trim();
 
+    // 尝试多种方式解析 JSON
+    let trades = [];
+
+    // 方式1：标准 JSON 数组
     try {
-      const trades = JSON.parse(cleaned);
-      if (Array.isArray(trades) && trades.length > 0) {
-        return res.status(200).json({ trades, count: trades.length });
+      const parsed = JSON.parse(cleaned);
+      if (Array.isArray(parsed)) trades = parsed;
+    } catch {}
+
+    // 方式2：提取 JSON 对象（非数组）
+    if (trades.length === 0) {
+      const matches = cleaned.match(/\{[^}]+\}/g);
+      if (matches) {
+        matches.forEach(m => {
+          try { const obj = JSON.parse(m); if (obj.date || obj.fund) trades.push(obj); } catch {}
+        });
       }
-    } catch {
-      // JSON 解析失败
     }
 
-    return res.status(200).json({ trades: [], rawText: content, count: 0 });
+    return res.status(200).json({ trades, count: trades.length });
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
