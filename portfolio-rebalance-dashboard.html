@@ -4673,23 +4673,40 @@ function processUploadedFiles(files){
         card.innerHTML =
           '<img src="' + base64 + '" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0" alt="截图预览">' +
           '<div style="flex:1"><div style="font-size:13px;font-weight:600;color:#1e293b">' + escapeHtml(fileName) + '</div>' +
-          '<div style="font-size:11px;color:#64748b">' + (fileSize/1024).toFixed(0) + ' KB ｜ <span class="ocr-status" style="color:#f59e0b">🔍 加载OCR引擎中...</span></div></div>' +
+          '<div style="font-size:11px;color:#64748b">' + (fileSize/1024).toFixed(0) + ' KB ｜ <span class="ocr-status" style="color:#f59e0b">🤖 AI识别中...</span></div></div>' +
           '<span class="ocr-check" style="color:#f59e0b;font-size:18px">⏳</span>';
         preview.appendChild(card);
 
-        callOCRApi(base64).then(function(texts){
-          var trades = parseTradeText(texts);
-          statusEl.textContent = 'OCR完成 · ' + texts.length + '行 · 识别' + trades.length + '条记录';
-          statusEl.style.color = '#16a34a'; checkEl.textContent = '✓'; checkEl.style.color='#22c55e';
-          if(trades.length > 0){
-            trades.forEach(function(t){ trades.unshift(t); });
+        callOCRApi(base64).then(function(result){
+          var statusEl = card.querySelector('.ocr-status');
+          var checkEl = card.querySelector('.ocr-check');
+          // AI 直接返回结构化交易记录，或 OCR 返回文字行
+          if(result.trades && result.trades.length > 0){
+            result.trades.forEach(function(t){ trades.unshift(t); });
             renderTrades();
-            showToast('✅ OCR识别成功，已导入 ' + trades.length + ' 条交易记录', 'success');
+            statusEl.textContent = 'AI识别完成 · 导入' + result.trades.length + '条记录';
+            statusEl.style.color = '#16a34a'; checkEl.textContent = '✓'; checkEl.style.color='#22c55e';
+            showToast('✅ AI 识别成功，已导入 ' + result.trades.length + ' 条交易记录', 'success');
+          } else if(result.texts && result.texts.length > 0){
+            var parsed = parseTradeText(result.texts);
+            statusEl.textContent = 'OCR完成 · ' + result.texts.length + '行 · 识别' + parsed.length + '条';
+            statusEl.style.color = '#16a34a'; checkEl.textContent = '✓'; checkEl.style.color='#22c55e';
+            if(parsed.length > 0){
+              parsed.forEach(function(t){ trades.unshift(t); });
+              renderTrades();
+              showToast('✅ 识别成功，已导入 ' + parsed.length + ' 条记录', 'success');
+            } else {
+              showToast('⚠️ 未识别到交易记录格式，请手动填写', 'warn');
+            }
           } else {
-            showToast('⚠️ OCR已完成，但未识别到交易记录格式，请手动填写', 'warn');
+            statusEl.textContent = '未识别到记录 · 请手动填写';
+            statusEl.style.color = '#f59e0b'; checkEl.textContent = '?'; checkEl.style.color='#f59e0b';
+            showToast('⚠️ 未识别到交易记录，请手动填写', 'warn');
           }
         }).catch(function(err){
-          statusEl.textContent = 'OCR失败: ' + (err.message || '网络错误');
+          var statusEl = card.querySelector('.ocr-status');
+          var checkEl = card.querySelector('.ocr-check');
+          statusEl.textContent = '识别失败: ' + (err.message || '网络错误');
           statusEl.style.color = '#ef4444'; checkEl.textContent = '✗'; checkEl.style.color='#ef4444';
         });
       };
@@ -4699,14 +4716,15 @@ function processUploadedFiles(files){
 }
 
 async function callOCRApi(base64){
-  // 使用 OCR.space 免费 API 识别图片文字
+  // 使用 AI Vision API 识别基金截图，直接返回结构化交易记录
   var res = await fetch('/api/ocr', {
     method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ image: base64 })
   });
   var data = await res.json();
   if(data.error) throw new Error(data.error);
-  return data.texts || [];
+  // 返回 { trades: [...], count: N } 或 { texts: [...], count: N }
+  return { trades: data.trades || [], texts: data.texts || [], count: data.count || 0 };
 }
 
 // 从OCR文本中提取交易记录
