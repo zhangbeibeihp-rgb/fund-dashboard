@@ -710,17 +710,6 @@ li{margin-bottom:2px}
 }
 @media(max-width:640px){
   .kpi-row{grid-template-columns:repeat(2,1fr)}
-  .header{flex-direction:column;align-items:flex-start;gap:10px}
-  .style-compare{grid-template-columns:1fr}
-  .goal-hero-amount{font-size:28px}
-  .header-new{flex-direction:column}
-  .header-right{width:100%;flex-direction:row;gap:12px}
-  .current-acct-card{margin-bottom:0;flex:1}
-  .quick-actions{flex-direction:row;flex-wrap:wrap;flex:1}
-  .qa-btn{flex:1;text-align:center}
-  .ai-goal-row{flex-direction:column}
-  .ai-goal-btn{width:100%}
-  .account-switcher{flex-wrap:wrap}
 }
 
 /* ===== P1-4: Toast 通知组件 ===== */
@@ -751,15 +740,113 @@ li{margin-bottom:2px}
 
 /* ===== P2-4: 移动端表格优化 ===== */
 @media(max-width:640px){
-  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  /* Body & Container */
+  body{padding:8px}
+  .container{max-width:100%}
+
+  /* Header Layout */
+  .header-new{flex-direction:column;gap:12px;padding:12px 16px}
+  .header-left{width:100%}
+  .header-right{width:100%;flex-direction:row;gap:8px;flex-wrap:wrap}
+  .header-top{flex-direction:column;align-items:flex-start;gap:8px}
+  .header-top h1{font-size:16px}
+
+  /* Account Switcher — Scrollable */
+  .account-switcher{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;padding-bottom:4px}
+  .account-switcher::-webkit-scrollbar{display:none}
+  .account-tabs{flex-shrink:0}
+  .acct-tab{padding:6px 12px;font-size:12px}
+  .acct-add-btn{width:28px;height:28px;flex-shrink:0}
+
+  /* AI Goal Section */
+  .ai-goal-row{flex-direction:column;gap:8px}
+  .ai-goal-btn{width:100%}
+  .ai-goal-input-wrap{padding:10px 12px}
+  .ai-goal-textarea{min-height:40px;font-size:12px}
+
+  /* Quick Actions */
+  .current-acct-card{padding:12px}
+  .quick-actions{flex-direction:row;flex-wrap:wrap;gap:4px}
+  .qa-btn{flex:1;min-width:80px;padding:8px 6px;font-size:12px;text-align:center}
+
+  /* KPI Row — 2 columns */
+  .kpi-row{grid-template-columns:repeat(2,1fr);gap:8px}
+  .kpi-card{padding:12px 10px}
+  .kpi-label{font-size:10px}
+  .kpi-value{font-size:18px}
+
+  /* Navigation — Horizontal Scroll */
+  .nav{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;padding:4px 0;gap:6px}
+  .nav::-webkit-scrollbar{display:none}
+  .nav-item{flex-shrink:0;padding:7px 14px;font-size:12px;white-space:nowrap}
+
+  /* Tables — Scroll + Sticky */
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -8px;padding:0 8px}
   .table-wrap table{min-width:600px}
   .table-wrap th,.table-wrap td{font-size:11px;padding:6px 8px;white-space:nowrap}
   .table-wrap th:first-child,.table-wrap td:first-child{position:sticky;left:0;background:#fff;z-index:1;box-shadow:2px 0 4px rgba(0,0,0,.05)}
   .table-wrap thead th:first-child{background:#f8fafc}
-  .fund-pool-grid{grid-template-columns:1fr !important}
-  .kpi-value{font-size:18px}
-  .toast-container{left:12px;right:12px;top:12px}
-  .toast{min-width:auto;max-width:none}
+
+  /* Cards */
+  .card{padding:14px;margin-bottom:10px}
+  .card h2{font-size:15px}
+  .grid-2,.grid-3{grid-template-columns:1fr;gap:10px}
+
+  /* Charts */
+  canvas{max-width:100% !important;height:auto !important}
+
+  /* Fund Pool */
+  .fund-pool-grid{grid-template-columns:1fr !important;gap:8px}
+  .fund-pool-card{padding:14px}
+
+  /* Goal Section */
+  .goal-hero-grid{grid-template-columns:1fr;gap:12px}
+  .goal-hero-amount{font-size:28px}
+  .goal-tabs{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+  .goal-tabs::-webkit-scrollbar{display:none}
+  .goal-tab{flex-shrink:0;padding:8px 14px;font-size:12px}
+
+  /* Style Comparison */
+  .style-compare{grid-template-columns:1fr}
+  .style-info{display:none}
+  .top3{flex-direction:column}
+
+  /* Account Card */
+  .acct-card{padding:12px}
+  .acct-card-header{flex-wrap:wrap;gap:6px}
+
+  /* PreMarket Section */
+  .us-index-cards{grid-template-columns:repeat(2,1fr) !important;gap:6px}
+  .us-index-card{padding:12px}
+  .premarket-result-bar{padding:12px;flex-direction:column;align-items:flex-start;gap:8px}
+
+  /* Toast */
+  .toast-container{left:8px;right:8px;top:8px}
+  .toast{min-width:auto;max-width:none;padding:10px 14px;font-size:13px}
+
+  /* Bottom Spacing */
+  .content-section{padding-bottom:80px}
+
+  /* Retire Chart */
+  .retire-row{flex-direction:column;gap:16px}
+  .retire-chart-wrap{width:100%}
+
+  /* Additional Grid Fixes */
+  .us-index-cards{grid-template-columns:repeat(2,1fr) !important;gap:6px}
+  .grid-2,.grid-3{grid-template-columns:1fr !important;gap:10px}
+  .est-grid{grid-template-columns:1fr 1fr !important;gap:8px}
+  .style-compare{grid-template-columns:1fr !important}
+  .fund-card-metrics{grid-template-columns:repeat(2,1fr) !important}
+  .fund-card-chart-row{flex-direction:column !important}
+  .fund-card-chart{width:100% !important}
+  .ai-prediction-grid{grid-template-columns:1fr !important}
+  .ai-trend-metrics{grid-template-columns:repeat(2,1fr) !important;gap:8px}
+  .ai-method-grid{grid-template-columns:1fr !important}
+  .scenario-grid,.rebalance-summary-grid{grid-template-columns:1fr !important;gap:8px}
+
+  /* Proba Card */
+  .proba-row{flex-direction:column;gap:12px}
+  .proba-card{width:100%}
 }
 
 /* ===== P2-3: 无障碍焦点样式 ===== */
