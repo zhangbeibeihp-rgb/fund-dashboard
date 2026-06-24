@@ -988,10 +988,10 @@ li{margin-bottom:2px}
         <div class="kpi-value orange" id="kpiTotalProfit">+¥1,614.34</div>
         <div class="kpi-sub">含已实现收益</div>
       </div>
-      <div class="kpi-card" onclick="showSection('estimate')">
-        <div class="kpi-label">已披露收益(QDII T+1)</div>
-        <div class="kpi-value red" id="kpiEstProfit">+¥376.87</div>
-        <div class="kpi-sub red" id="kpiEstPct">来源: 美东06-22收盘</div>
+      <div class="kpi-card" onclick="showSection('estimate')" id="kpiEstimateCard" style="border-top-color:#d946ef">
+        <div class="kpi-label" id="kpiEstLabel">💫 今晚QDII预估</div>
+        <div class="kpi-value" style="color:#a855f7" id="kpiQdiiEst">计算中…</div>
+        <div class="kpi-sub" id="kpiQdiiSub">开市后自动计算</div>
       </div>
       <div class="kpi-card" onclick="showSection('goal')">
         <div class="kpi-label">目标进度</div>
@@ -1145,163 +1145,64 @@ li{margin-bottom:2px}
   <!-- SECTION 4: 预估金额 -->
   <!-- =========================================== -->
   <div id="sec-estimate" style="display:none">
-    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-      <span>📈 预估金额计算</span>
-      <button class="premarket-toggle-btn" id="premarketToggleBtn" onclick="togglePreMarket()">
-        🌅 盘前估算
-      </button>
-    </div>
 
-    <!-- ===== 盘前估算面板（可展开/收起）===== -->
-    <div class="card" id="premarketPanel" style="margin-bottom:16px">
-      <div class="premarket-panel" id="premarketPanelInner">
-        <h2 style="margin-bottom:4px">🌅 盘前估算 — 天天基金实时估值 API</h2>
-        <p style="font-size:12px;color:#64748b;margin-bottom:14px">点击「刷新估值」自动从天天基金 API 获取 15 支基金的实时估值数据（JSONP 方式调用，无需后端）。QDII 基金估值反映最近已收盘市场数据，非今日盘中实时。</p>
-
-        <!-- 模式切换 -->
-        <div style="display:flex;gap:0;margin-bottom:14px;border-radius:10px;overflow:hidden;border:2px solid #e2e8f0">
-          <button id="pmTabApi" class="pm-tab-btn active" onclick="switchPmTab('api')" style="flex:1;padding:10px;border:none;background:#6366f1;color:#fff;font-size:13px;font-weight:600;cursor:pointer">🤖 API 自动获取</button>
-          <button id="pmTabManual" class="pm-tab-btn" onclick="switchPmTab('manual')" style="flex:1;padding:10px;border:none;background:#fff;color:#64748b;font-size:13px;font-weight:600;cursor:pointer">✋ 手动输入指数</button>
-        </div>
-
-        <!-- ===== API 模式 ===== -->
-        <div id="pmApiMode">
-          <!-- 步骤一：美股指数行情（QT API）-->
-          <div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:14px">
-            <h3 style="font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px">📡 美股实时指数行情 <span style="font-size:10px;color:#94a3b8;font-weight:400">— 腾讯行情 qt.gtimg.cn</span></h3>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px" id="pmUsIndexGrid">
-              <div class="us-index-card" id="usIdxNDX"><div class="us-idx-name">纳斯达克100</div><div class="us-idx-price" id="usIdxNDXPrice">--</div><div class="us-idx-change" id="usIdxNDXChange">--</div></div>
-              <div class="us-index-card" id="usIdxSPX"><div class="us-idx-name">标普500</div><div class="us-idx-price" id="usIdxSPXPrice">--</div><div class="us-idx-change" id="usIdxSPXChange">--</div></div>
-              <div class="us-index-card" id="usIdxEEM"><div class="us-idx-name">MSCI新兴市场ETF</div><div class="us-idx-price" id="usIdxEEMPrice">--</div><div class="us-idx-change" id="usIdxEEMChange">--</div></div>
-              <div class="us-index-card" id="usIdxDJI"><div class="us-idx-name">道琼斯工业</div><div class="us-idx-price" id="usIdxDJIPrice">--</div><div class="us-idx-change" id="usIdxDJIChange">--</div></div>
-            </div>
-            <div style="font-size:10px;color:#94a3b8;margin-top:8px" id="pmUsIndexTime"></div>
-          </div>
-
-          <!-- 操作按钮行 -->
-          <div class="premarket-actions">
-            <button class="premarket-calc-btn" id="pmFetchBtn" onclick="fetchQDIIPreMarket()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">🌅 计算当日QDII盘前估值</button>
-            <button class="premarket-calc-btn" id="pmAutoBtn" onclick="toggleAutoRefresh()" style="background:#3b82f6">⏱️ 自动刷新</button>
-            <button class="premarket-reset-btn" onclick="resetPreMarket()">↺ 清空</button>
-            <span style="font-size:11px;color:#94a3b8;margin-left:auto" id="premarketTime"></span>
-          </div>
-
-          <div class="premarket-hint" style="margin-bottom:0">
-            🧮 <span><strong>计算逻辑：</strong>① 从天天基金 fundgz API 获取每支基金的最新净值(上一交易日) → ② 从腾讯行情 API 获取美股指数的最近涨跌 → ③ <strong>当日QDII盘前估值 = 昨日持仓金额 × (1 + 对应指数涨跌%)</strong>。A股基金用基金自身当日估值(15:00)。数据仅供参考。</span>
-          </div>
-
-          <!-- 加载中 -->
-          <div id="pmLoading" style="display:none;text-align:center;padding:24px">
-            <div style="display:inline-block;width:28px;height:28px;border:3px solid #e2e8f0;border-top-color:#6366f1;border-radius:50%;animation:spin .8s linear infinite"></div>
-            <p style="margin-top:8px;font-size:13px;color:#64748b" id="pmLoadText">正在获取数据...</p>
-            <p style="font-size:11px;color:#94a3b8;margin-top:4px" id="pmLoadProgress"></p>
-          </div>
-
-          <!-- API 失败提示 -->
-          <div id="pmError" style="display:none;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;padding:14px;margin-top:12px">
-            <p style="font-size:13px;color:#dc2626;font-weight:600">❌ API 调用失败</p>
-            <p style="font-size:12px;color:#991b1b;margin-top:4px" id="pmErrorText">可能原因：网络问题 / 非交易时段 / 接口限流。请尝试手动输入模式。</p>
-            <button class="premarket-reset-btn" style="margin-top:8px" onclick="switchPmTab('manual')">→ 切换到手动输入</button>
-          </div>
-        </div>
-
-        <!-- ===== 手动输入模式 ===== -->
-        <div id="pmManualMode" style="display:none">
-          <div class="premarket-hint">
-            💡 <span><strong>手动输入：</strong>纳斯达克100 / 标普500 → 看美股期货；MSCI新兴市场 → 看EEM ETF 盘前；A股指数 → 看竞价。输入 % 即可，支持正负数。</span>
-          </div>
-          <div class="premarket-index-grid" id="premarketIndexGrid"></div>
-          <div class="premarket-actions">
-            <button class="premarket-calc-btn" onclick="calcPreMarket()">🧮 计算预估</button>
-            <button class="premarket-reset-btn" onclick="resetPreMarket()">↺ 重置</button>
-          </div>
-        </div>
-
-        <!-- 结果汇总条（两种模式共用）-->
-        <div class="premarket-result-bar" id="premarketResultBar" style="display:none">
-          <div class="premarket-result-item" id="pmResTotal">
-            <div class="premarket-result-label">📊 预估总资产</div>
-            <div class="premarket-result-value" id="pmValTotal">--</div>
-            <div class="premarket-result-sub" id="pmSubTotal">vs 昨日收盘 ¥--</div>
-          </div>
-          <div class="premarket-result-item" id="pmResProfit">
-            <div class="premarket-result-label">📈 预估盈亏</div>
-            <div class="premarket-result-value" id="pmValProfit">--</div>
-            <div class="premarket-result-sub" id="pmSubProfit">--</div>
-          </div>
-          <div class="premarket-result-item" id="pmResRate">
-            <div class="premarket-result-label">📉 预估日收益率</div>
-            <div class="premarket-result-value flat" id="pmValRate">--</div>
-            <div class="premarket-result-sub" id="pmSubRate">基于持仓加权</div>
-          </div>
-        </div>
-
-        <!-- 各基金明细表（两种模式共用）-->
-        <div id="premarketFundTableWrap" style="display:none">
-          <h3 style="font-size:14px;margin-bottom:8px" id="pmTableTitle">📋 各基金盘前估算明细</h3>
-          <div class="table-wrap" style="max-height:400px">
-            <table class="premarket-fund-table">
-              <thead><tr>
-                <th>基金名称</th><th>代码</th><th>市场</th><th>参考指数</th>
-                <th>估值涨跌</th><th>昨日持仓</th><th>预估涨跌额</th><th>预估金额</th>
-                <th>估值时间</th>
-              </tr></thead>
-              <tbody id="premarketBody"></tbody>
-            </table>
-          </div>
-        </div>
+    <!-- ===== 🌙 QDII 夜盘数据（自动获取美股实时指数）===== -->
+    <div class="card" style="margin-bottom:14px;border-left:4px solid #6366f1">
+      <h2>🌙 QDII 夜盘数据 · 美股实时指数行情</h2>
+      <p style="font-size:12px;color:#64748b;margin-bottom:12px">数据源：腾讯行情 qt.gtimg.cn · 用于计算今晚QDII预估盈亏</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px" id="nightIndexGrid">
+        <div class="us-index-card" id="usIdxNDX"><div class="us-idx-name">纳斯达克100</div><div class="us-idx-price" id="usIdxNDXPrice">--</div><div class="us-idx-change" id="usIdxNDXChange">--</div></div>
+        <div class="us-index-card" id="usIdxSPX"><div class="us-idx-name">标普500</div><div class="us-idx-price" id="usIdxSPXPrice">--</div><div class="us-idx-change" id="usIdxSPXChange">--</div></div>
+        <div class="us-index-card" id="usIdxEEM"><div class="us-idx-name">MSCI新兴市场ETF</div><div class="us-idx-price" id="usIdxEEMPrice">--</div><div class="us-idx-change" id="usIdxEEMChange">--</div></div>
+        <div class="us-index-card" id="usIdxDJI"><div class="us-idx-name">道琼斯工业</div><div class="us-idx-price" id="usIdxDJIPrice">--</div><div class="us-idx-change" id="usIdxDJIChange">--</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
+        <span style="font-size:11px;color:#94a3b8" id="nightIdxTime">⏳ 等待获取...</span>
+        <button class="premarket-calc-btn" onclick="fetchNightIndexData()" style="font-size:12px;padding:6px 14px">🔄 刷新美股指数</button>
+        <button class="premarket-calc-btn" id="nightEstBtn" onclick="calcNightEstimate()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);font-size:12px;padding:6px 14px">🧮 计算今晚QDII预估盈亏</button>
+        <span style="font-size:10px;color:#d97706;margin-left:auto">💡 需美股盘中才能刷新实时数据</span>
+      </div>
+      <div id="nightEstResult" style="display:none;margin-top:10px;padding:10px 14px;background:linear-gradient(135deg,#faf5ff,#f5f3ff);border-radius:8px;border:1px solid #e9d5ff">
+        <span style="font-weight:700;color:#7c3aed" id="nightEstText"></span>
+        <span style="font-size:11px;color:#a855f7;margin-left:8px" id="nightEstTime"></span>
       </div>
     </div>
 
-    <div class="card" style="margin-bottom:16px">
-      <h2>收益预估与净值来源日期</h2>
-      <div class="est-grid">
-        <div class="est-item"><div class="est-label">QDII 收益来源日（美东）</div><div class="est-val blue">06-22 周一</div></div>
-        <div class="est-item"><div class="est-label">A股收益来源日</div><div class="est-val blue">06-23 周二</div></div>
-        <div class="est-item"><div class="est-label">已确认收益（昨日）</div><div class="est-val red" id="estProfit">+¥376.87</div></div>
-        <div class="est-item"><div class="est-label">当前总资产（已披露）</div><div class="est-val blue" id="estTotal">¥10,920.20</div></div>
+    <!-- ===== 🇺🇸 QDII：T+1 收益刷新前预估 ===== -->
+    <div class="card" style="margin-bottom:14px;border-left:4px solid #3b82f6">
+      <h2>🇺🇸 QDII · T+1 收益刷新前预估</h2>
+      <p style="font-size:12px;color:#64748b;margin-bottom:10px">基于最近已披露净值 + 对应美股指数最近收盘涨跌预估 · 今晚净值披露后刷新</p>
+      <div class="table-wrap" style="max-height:400px">
+        <table><thead><tr>
+          <th>基金名称</th><th>类型</th><th>参考指数</th><th>持仓金额</th><th>预估涨跌</th><th>预估收益</th><th>预估金额</th><th>净值日期</th>
+        </tr></thead><tbody id="estQdiiBody"></tbody></table>
       </div>
-      <div class="info-box">
-        <strong>📌 QDII 净值披露规则（重要）：</strong>
-        <ul>
-          <li><strong>QDII基金 ≠ 实时盘中预估</strong>。QDII 净值反映的是海外市场<strong>已收盘</strong>的实际数据，存在时差和披露滞后</li>
-          <li><strong>美股QDII（T+1披露）</strong>：今日(06-23)显示的"昨日收益"实际反映的是 <strong>06-22(美东周一)</strong> 美股收盘价折算后的净值变动</li>
-          <li><strong>美股QDII（T+2披露）</strong>：部分QDII(如嘉实美国成长)净值披露滞后2天，今日显示的收益可能反映 <strong>06-19(美东周五)</strong> 的数据</li>
-          <li><strong>时差原因</strong>：美股收盘时间为北京时间次日凌晨 04:00(夏令时)/05:00(冬令时)，基金公司需等海外市场收盘后才能计算净值</li>
-          <li><strong>国内基金（T+0披露）</strong>：永赢半导体、广发远见智选、银华集成电路、华夏芯片ETF — 净值反映当日 <strong>06-23(A股周二)</strong> A股收盘价，当晚20:00后披露</li>
-          <li><strong>"预估涨跌"列</strong>为基于参考指数的估算值，最终以基金公司披露净值为准</li>
-        </ul>
-      </div>
-      <div class="warn-box" style="margin-top:12px">
-        ⚠️ <strong>并非今天的盘前/盘中实时预估。</strong>您看到的收益数据来源于 QDII 净值披露（有1-2天滞后），反映的是海外市场<strong>已收盘</strong>的历史数据，而非今天的盘中实时变动。如需查看今日美股盘中实时行情，请参考纳斯达克期货或行情软件。
-      </div>
+      <div style="margin-top:8px;font-size:12px;font-weight:600;color:#3b82f6" id="estQdiiSummary"></div>
     </div>
-    <div class="card" style="margin-bottom:16px">
-      <h2>📊 各基金预估明细与净值来源</h2>
-      <div class="table-wrap" style="max-height:450px">
-        <table>
-          <thead><tr>
-            <th>基金名称</th><th>类型</th><th>市场</th><th>持仓金额</th><th>参考指数</th><th>收益来源日期</th><th>披露滞后</th><th>净值状态</th><th>预估涨跌</th><th>预估收益</th><th>预估收盘金额</th>
-          </tr></thead>
-          <tbody id="estBody"></tbody>
-        </table>
+
+    <!-- ===== 🇨🇳 A股：收益刷新前预估 ===== -->
+    <div class="card" style="border-left:4px solid #ef4444">
+      <h2>🇨🇳 A股 · 收益刷新前预估</h2>
+      <p style="font-size:12px;color:#64748b;margin-bottom:10px">基于当日基金实时估值或昨日涨跌 · 15:00收盘后净值刷新</p>
+      <div class="table-wrap" style="max-height:400px">
+        <table><thead><tr>
+          <th>基金名称</th><th>类型</th><th>参考指数</th><th>持仓金额</th><th>预估涨跌</th><th>预估收益</th><th>预估金额</th><th>净值日期</th>
+        </tr></thead><tbody id="estABody"></tbody></table>
       </div>
+      <div style="margin-top:8px;font-size:12px;font-weight:600;color:#ef4444" id="estASummary"></div>
     </div>
 
     <!-- QDII 净值披露时间轴 -->
-    <div class="card" style="margin-bottom:16px">
-      <h2>🕐 QDII 净值披露时间轴（今日 06-23 周二）</h2>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px">
-        <div style="background:#f8fafc;border-radius:12px;padding:16px">
-          <h3 style="font-size:14px;color:#1e293b;margin-bottom:10px">🇺🇸 美股QDII（T+1披露）— 11支基金</h3>
-          <div style="font-size:12px;color:#64748b;line-height:2">
-            <div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#94a3b8;flex-shrink:0"></span> 06-22(美东周一) 09:30 — 美股开盘</div>
-            <div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#94a3b8;flex-shrink:0"></span> 06-22(美东周一) 16:00 — 美股收盘 → 净值计算依据</div>
-            <div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;flex-shrink:0"></span> 06-23(北京周二) 04:00 — 北京时间收到美股收盘数据</div>
-            <div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;flex-shrink:0"></span> 06-23(北京周二) 白天 — 基金公司计算QDII净值</div>
-            <div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0"></span> 06-23(北京周二) ~20:00 — <strong style="color:#16a34a">净值披露 → App更新"昨日收益"</strong></div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0"></span> ⚠️ 06-23 北京时间白天看到的收益，反映的是 <strong>06-22 美东</strong> 收盘数据</div>
-          </div>
+    <div class="card" style="margin-top:14px">
+      <h2>🕐 QDII 净值披露时间轴</h2>
+      <div style="font-size:12px;color:#64748b;line-height:2;margin-top:8px">
+        <div>🌙 美股开盘（美东 09:30 / 北京 21:30）→ 盘中可获取实时指数</div>
+        <div>🌙 美股收盘（美东 16:00 / 北京 04:00）→ 净值计算依据</div>
+        <div>☀️ 次日白天 → 基金公司计算 QDII 净值</div>
+        <div>✅ ~20:00 → <strong style="color:#16a34a">净值披露，App 更新"昨日收益"</strong></div>
+      </div>
+    </div>
+  </div>
         </div>
         <div style="background:#f8fafc;border-radius:12px;padding:16px">
           <h3 style="font-size:14px;color:#1e293b;margin-bottom:10px">🇨🇳 A股基金（T+0披露）— 4支基金</h3>
@@ -3159,33 +3060,124 @@ function calcPreMarket(){
 }
 
 function renderEstimate(){
-  let estTotalProfit=0;
-  document.getElementById('estBody').innerHTML = funds.map(f=>{
-    const estProfit = f.amount * f.estChange/100;
-    estTotalProfit += estProfit;
+  const qdiiFunds = funds.filter(f => f.market === 'us');
+  const aFunds = funds.filter(f => f.market !== 'us');
+  let qdiiProfit = 0, aProfit = 0;
+
+  // QDII 表格
+  document.getElementById('estQdiiBody').innerHTML = qdiiFunds.map(f => {
+    const estProfit = f.amount * f.estChange / 100;
+    qdiiProfit += estProfit;
     const estClose = f.amount + estProfit;
-    const marketLabel = f.market==='us' ? '🇺🇸 美股' : '🇨🇳 A股';
-    const marketColor = f.market==='us' ? '#3b82f6' : '#ef4444';
-    const lagColor = f.navLag==='T+0' ? '#16a34a' : f.navLag==='T+1' ? '#d97706' : '#dc2626';
-    const statusColor = f.navStatus==='已披露' ? '#16a34a' : '#d97706';
     return `<tr>
-      <td style="font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.name}">${f.name}</td>
+      <td style="font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.name}">${f.name}</td>
       <td><span class="tag ${typeTagClass[f.type]}">${typeLabel[f.type]}</span></td>
-      <td><span style="font-size:11px;color:${marketColor};font-weight:600">${marketLabel}</span></td>
+      <td style="font-size:11px;color:#3b82f6">${f.ref}</td>
       <td>¥${f.amount.toFixed(2)}</td>
-      <td class="gray">${f.ref}</td>
-      <td style="font-size:11px;font-weight:600;color:#475569;white-space:nowrap">${f.navDate}</td>
-      <td><span style="font-size:11px;padding:2px 6px;border-radius:4px;background:#f1f5f9;color:${lagColor};font-weight:600">${f.navLag}</span></td>
-      <td><span style="font-size:11px;color:${statusColor};font-weight:500">${f.navStatus}</span></td>
-      <td class="red">+${f.estChange.toFixed(2)}%</td>
-      <td class="red">+¥${estProfit.toFixed(2)}</td>
+      <td style="color:#dc2626;font-weight:600">+${f.estChange.toFixed(2)}%</td>
+      <td style="color:#dc2626">+¥${estProfit.toFixed(2)}</td>
       <td>¥${estClose.toFixed(2)}</td>
+      <td style="font-size:11px;color:#64748b">${f.navDate}</td>
     </tr>`;
   }).join('');
-  // 预估收益汇总
-  document.getElementById('estProfit').textContent='+'+estTotalProfit.toFixed(2);
-  document.getElementById('estTotal').textContent='¥'+(totalAsset+estTotalProfit).toFixed(2);
+  const qdiiTotal = qdiiFunds.reduce((s,f) => s + f.amount, 0);
+  document.getElementById('estQdiiSummary').textContent =
+    qdiiFunds.length > 0
+      ? `合计：${qdiiFunds.length} 支QDII · 持仓 ¥${qdiiTotal.toFixed(2)} · 预估收益 +¥${qdiiProfit.toFixed(2)}（+${(qdiiTotal > 0 ? qdiiProfit / qdiiTotal * 100 : 0).toFixed(2)}%）`
+      : `暂无 QDII 持仓`;
+
+  // A股 表格
+  document.getElementById('estABody').innerHTML = aFunds.map(f => {
+    const estProfit = f.amount * f.estChange / 100;
+    aProfit += estProfit;
+    const estClose = f.amount + estProfit;
+    return `<tr>
+      <td style="font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.name}">${f.name}</td>
+      <td><span class="tag ${typeTagClass[f.type]}">${typeLabel[f.type]}</span></td>
+      <td style="font-size:11px;color:#ef4444">${f.ref}</td>
+      <td>¥${f.amount.toFixed(2)}</td>
+      <td style="color:#dc2626;font-weight:600">+${f.estChange.toFixed(2)}%</td>
+      <td style="color:#dc2626">+¥${estProfit.toFixed(2)}</td>
+      <td>¥${estClose.toFixed(2)}</td>
+      <td style="font-size:11px;color:#64748b">${f.navDate}</td>
+    </tr>`;
+  }).join('');
+  const aTotal = aFunds.reduce((s,f) => s + f.amount, 0);
+  document.getElementById('estASummary').textContent =
+    aFunds.length > 0
+      ? `合计：${aFunds.length} 支A股 · 持仓 ¥${aTotal.toFixed(2)} · 预估收益 +¥${aProfit.toFixed(2)}（+${(aTotal > 0 ? aProfit / aTotal * 100 : 0).toFixed(2)}%）`
+      : `暂无 A股 持仓`;
 }
+
+// ===== 🌙 获取夜盘美股指数数据 =====
+function fetchNightIndexData(){
+  document.getElementById('nightIdxTime').textContent = '⏳ 获取中...';
+  fetchUSIndexData().then(() => {
+    const times = Object.values(US_INDEX_MAP).filter(i => i.time).map(i => i.time);
+    const latest = times.sort().pop();
+    document.getElementById('nightIdxTime').textContent = latest
+      ? `📡 数据时间：${latest}（美东最近收盘）`
+      : '⚠️ 未获取到实时数据（可能非交易时段）';
+  }).catch(() => {
+    document.getElementById('nightIdxTime').textContent = '❌ 获取失败，请检查网络';
+  });
+}
+
+// ===== 🧮 计算今晚QDII预估盈亏（基于夜盘指数）=====
+function calcNightEstimate(){
+  const qdiiFunds = funds.filter(f => f.market === 'us');
+  if (qdiiFunds.length === 0) {
+    showToast('⚠️ 没有QDII持仓', 'error');
+    return;
+  }
+
+  let totalEst = 0;
+  qdiiFunds.forEach(f => {
+    const idxKey = Object.keys(US_INDEX_MAP).find(k => US_INDEX_MAP[k].ref === f.ref);
+    let changePct = 0;
+    if (idxKey && US_INDEX_MAP[idxKey].changePct !== 0) {
+      changePct = US_INDEX_MAP[idxKey].changePct;
+    } else {
+      changePct = f.estChange || 0;
+    }
+    totalEst += f.amount * changePct / 100;
+  });
+
+  const qdiiTotal = qdiiFunds.reduce((s,f) => s + f.amount, 0);
+  const rateVal = qdiiTotal > 0 ? (totalEst / qdiiTotal * 100) : 0;
+  const sign = totalEst >= 0 ? '+' : '';
+
+  document.getElementById('nightEstResult').style.display = 'block';
+  document.getElementById('nightEstText').textContent =
+    `💫 今晚QDII预估盈亏：${sign}¥${Math.abs(totalEst).toFixed(2)}（${sign}${rateVal.toFixed(2)}%）`;
+  document.getElementById('nightEstTime').textContent =
+    `基于最新美股指数涨跌 · 总持仓 ¥${qdiiTotal.toFixed(2)}`;
+
+  // 同时更新 KPI 卡片
+  const kpiEl = document.getElementById('kpiQdiiEst');
+  const kpiSub = document.getElementById('kpiQdiiSub');
+  if (kpiEl) {
+    kpiEl.textContent = `${sign}¥${Math.abs(totalEst).toFixed(2)}`;
+    kpiEl.style.color = totalEst >= 0 ? '#a855f7' : '#16a34a';
+  }
+  if (kpiSub) {
+    kpiSub.textContent = `${sign}${rateVal.toFixed(2)}% · 共${qdiiFunds.length}支QDII`;
+  }
+
+  showToast(`🌙 今晚QDII预估：${sign}¥${Math.abs(totalEst).toFixed(2)}（${sign}${rateVal.toFixed(2)}%）`, 'success');
+}
+
+// ===== 打开预估Tab时自动刷新指数 =====
+document.addEventListener('DOMContentLoaded', function() {
+  // Hijack showSection to auto-refresh night index when estimate tab is opened
+  const _origShowSection = showSection;
+  showSection = function(name) {
+    _origShowSection(name);
+    if (name === 'estimate') {
+      setTimeout(fetchNightIndexData, 300);
+    }
+  };
+});
 
 // ===== 渲染交易记录 =====
 function renderTrades(){

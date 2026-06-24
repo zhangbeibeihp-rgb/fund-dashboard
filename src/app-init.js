@@ -68,6 +68,11 @@ async function appInit() {
     // 10. 设置实时同步
     setupRealtimeSync();
 
+    // 11. 自动获取夜盘美股指数（后台静默执行）
+    setTimeout(() => {
+      if (typeof fetchNightIndexData === 'function') fetchNightIndexData();
+    }, 2000);
+
     console.log('[App] 云端模式启动完成');
   } catch (e) {
     console.error('[App] 数据加载失败:', e);
