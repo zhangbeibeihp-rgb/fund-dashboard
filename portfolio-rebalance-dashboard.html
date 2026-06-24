@@ -4702,19 +4702,24 @@ function processUploadedFiles(files){
 }
 
 async function callOCRApi(base64){
-  // 使用 Tesseract.js 浏览器端 OCR (免费、无需API Key、支持中文)
+  // 使用 Tesseract.js v5 浏览器端 OCR (免费、无需API Key、支持中文)
   if(!window.Tesseract){
-    // 动态加载 Tesseract.js
     await new Promise(function(resolve, reject){
       var s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js';
-      s.onload = resolve; s.onerror = function(){ reject(new Error('Tesseract.js 加载失败')); };
+      s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+      s.onload = resolve;
+      s.onerror = function(){
+        // 备用 CDN
+        var s2 = document.createElement('script');
+        s2.src = 'https://unpkg.com/tesseract.js@5/dist/tesseract.min.js';
+        s2.onload = resolve;
+        s2.onerror = function(){ reject(new Error('Tesseract.js 加载失败，请检查网络')); };
+        document.head.appendChild(s2);
+      };
       document.head.appendChild(s);
     });
   }
-  var worker = await Tesseract.createWorker('chi_sim+eng', 1, {
-    logger: function(m){ if(m.status === 'recognizing text'){ /* silent */ } }
-  });
+  var worker = await Tesseract.createWorker('chi_sim');
   var result = await worker.recognize(base64);
   await worker.terminate();
   return (result.data.text || '').split('\n').filter(function(l){ return l.trim(); });
