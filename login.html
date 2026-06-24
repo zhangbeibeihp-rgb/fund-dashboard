@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录 · 基金组合管理仪表盘</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e293b">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.bg-gradient {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(99,102,241,.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(34,197,94,.1) 0%, transparent 50%),
+    #0f172a;
+  z-index: -1;
+}
+.login-card {
+  background: rgba(30,41,59,.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(99,102,241,.2);
+  border-radius: 20px;
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 25px 50px rgba(0,0,0,.5);
+}
+.logo {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.logo-icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 12px;
+}
+.logo-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+.logo-sub {
+  font-size: 14px;
+  color: #64748b;
+  margin-top: 4px;
+}
+.tab-row {
+  display: flex;
+  gap: 4px;
+  background: rgba(15,23,42,.6);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 28px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.tab-btn.active {
+  background: #6366f1;
+  color: #fff;
+}
+.form-group {
+  margin-bottom: 20px;
+}
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(15,23,42,.6);
+  border: 1px solid rgba(99,102,241,.15);
+  border-radius: 10px;
+  color: #e2e8f0;
+  font-size: 15px;
+  transition: border-color .2s;
+  outline: none;
+}
+.form-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99,102,241,.1);
+}
+.form-input::placeholder { color: #475569; }
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  margin-top: 8px;
+}
+.submit-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(99,102,241,.3); }
+.submit-btn:active { transform: translateY(0); }
+.submit-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+.error-msg {
+  background: rgba(239,68,68,.1);
+  border: 1px solid rgba(239,68,68,.3);
+  color: #fca5a5;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  display: none;
+}
+.error-msg.show { display: block; }
+.setup-notice {
+  background: rgba(251,191,36,.1);
+  border: 1px solid rgba(251,191,36,.3);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  color: #fde68a;
+  line-height: 1.6;
+  display: none;
+}
+.setup-notice.show { display: block; }
+.setup-notice a { color: #fbbf24; text-decoration: underline; }
+.divider {
+  text-align: center;
+  margin: 24px 0;
+  color: #475569;
+  font-size: 13px;
+  position: relative;
+}
+.divider::before, .divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: rgba(99,102,241,.15);
+}
+.divider::before { left: 0; }
+.divider::after { right: 0; }
+.hint {
+  text-align: center;
+  font-size: 13px;
+  color: #475569;
+  margin-top: 20px;
+}
+.hint a { color: #6366f1; text-decoration: none; }
+.hint a:hover { text-decoration: underline; }
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="bg-gradient"></div>
+
+<div class="login-card">
+  <div class="logo">
+    <span class="logo-icon">📊</span>
+    <div class="logo-title">基金组合管理仪表盘</div>
+    <div class="logo-sub">云端同步 · 多设备数据互通</div>
+  </div>
+
+  <div id="setupNotice" class="setup-notice">
+    ⚠️ Supabase 尚未配置。请编辑 <code>src/config.js</code> 填入你的项目 URL 和 anon key，<br>
+    并按 <a href="SETUP.md" target="_blank">SETUP.md</a> 指南完成数据库初始化。
+  </div>
+
+  <div class="tab-row">
+    <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">登录</button>
+    <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">注册</button>
+  </div>
+
+  <div id="errorMsg" class="error-msg"></div>
+
+  <!-- 登录表单 -->
+  <form id="loginForm" onsubmit="handleLogin(event)">
+    <div class="form-group">
+      <label class="form-label">邮箱</label>
+      <input type="email" class="form-input" id="loginEmail" placeholder="your@email.com" required autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label class="form-label">密码</label>
+      <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+    </div>
+    <button type="submit" class="submit-btn" id="loginBtn">登录</button>
+  </form>
+
+  <!-- 注册表单 -->
+  <form id="registerForm" onsubmit="handleRegister(event)" style="display:none;">
+    <div class="form-group">
+      <label class="form-label">用户名</label>
+      <input type="text" class="form-input" id="regUsername" placeholder="你的昵称" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">邮箱</label>
+      <input type="email" class="form-input" id="regEmail" placeholder="your@email.com" required autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label class="form-label">密码（至少 6 位）</label>
+      <input type="password" class="form-input" id="regPassword" placeholder="••••••••" required minlength="6" autocomplete="new-password">
+    </div>
+    <button type="submit" class="submit-btn" id="regBtn">创建账号</button>
+  </form>
+
+  <div class="hint">
+    <a href="portfolio-rebalance-dashboard.html">← 返回仪表盘（离线模式）</a>
+  </div>
+</div>
+
+<script src="src/config.js"></script>
+<script src="src/supabase.js"></script>
+<script src="src/auth.js"></script>
+<script>
+// ===== 初始化 =====
+async function initLogin() {
+  if (!isSupabaseConfigured()) {
+    document.getElementById('setupNotice').classList.add('show');
+    return;
+  }
+
+  const client = await initSupabase();
+  if (!client) {
+    document.getElementById('setupNotice').classList.add('show');
+    return;
+  }
+
+  // 已登录则直接跳转
+  const session = await authGetSession();
+  if (session) {
+    window.location.href = 'portfolio-rebalance-dashboard.html';
+    return;
+  }
+}
+
+// ===== Tab 切换 =====
+function switchTab(tab) {
+  if (tab === 'login') {
+    document.getElementById('tabLogin').classList.add('active');
+    document.getElementById('tabRegister').classList.remove('active');
+    document.getElementById('loginForm').style.display = '';
+    document.getElementById('registerForm').style.display = 'none';
+  } else {
+    document.getElementById('tabLogin').classList.remove('active');
+    document.getElementById('tabRegister').classList.add('active');
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = '';
+  }
+  hideError();
+}
+
+// ===== 错误提示 =====
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function hideError() {
+  document.getElementById('errorMsg').classList.remove('show');
+}
+
+// ===== 登录 =====
+async function handleLogin(e) {
+  e.preventDefault();
+  hideError();
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>登录中...';
+
+  try {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    await authLogin(email, password);
+    window.location.href = 'portfolio-rebalance-dashboard.html';
+  } catch (err) {
+    showError(err.message || '登录失败，请检查邮箱和密码');
+    btn.disabled = false;
+    btn.textContent = '登录';
+  }
+}
+
+// ===== 注册 =====
+async function handleRegister(e) {
+  e.preventDefault();
+  hideError();
+  const btn = document.getElementById('regBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>创建中...';
+
+  try {
+    const username = document.getElementById('regUsername').value;
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+    const result = await authRegister(email, password, username);
+
+    if (result.user && !result.session) {
+      // 需要邮箱确认
+      showError('注册成功！请检查邮箱确认链接，确认后即可登录。');
+      switchTab('login');
+      document.getElementById('loginEmail').value = email;
+    } else if (result.session) {
+      // 直接登录
+      window.location.href = 'portfolio-rebalance-dashboard.html';
+    }
+  } catch (err) {
+    showError(err.message || '注册失败');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '创建账号';
+  }
+}
+
+// 回车提交
+document.getElementById('loginPassword').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') handleLogin(e);
+});
+
+initLogin();
+</script>
+</body>
+</html>

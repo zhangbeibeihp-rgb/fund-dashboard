@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>部署指南 — 基金仪表盘 PWA</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding:24px 16px}
+  .container{max-width:860px;margin:0 auto}
+  h1{font-size:28px;font-weight:700;margin-bottom:6px;background:linear-gradient(135deg,#a5b4fc,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .subtitle{color:#94a3b8;font-size:15px;margin-bottom:32px}
+  
+  /* 进度条 */
+  .progress-bar{background:#1e293b;border-radius:99px;height:8px;margin-bottom:32px;overflow:hidden}
+  .progress-fill{height:100%;background:linear-gradient(90deg,#6366f1,#818cf8);border-radius:99px;transition:width .5s ease;width:0%}
+  .progress-text{font-size:13px;color:#64748b;text-align:right;margin-top:6px}
+
+  /* 步骤卡 */
+  .step{background:#1e293b;border:1.5px solid #334155;border-radius:16px;padding:24px;margin-bottom:20px;transition:all .3s}
+  .step.done{border-color:#22c55e;background:#0f2e1a}
+  .step.active{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.15)}
+  .step-header{display:flex;align-items:center;gap:14px;margin-bottom:16px;cursor:pointer}
+  .step-num{width:36px;height:36px;border-radius:50%;background:#334155;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;transition:all .3s}
+  .step.done .step-num{background:#22c55e;color:#0f172a}
+  .step.active .step-num{background:#6366f1;color:#fff}
+  .step-title{font-size:18px;font-weight:600;flex:1}
+  .step-badge{font-size:12px;padding:3px 10px;border-radius:99px;background:#334155;color:#94a3b8}
+  .step.done .step-badge{background:#166534;color:#86efac}
+  .step-body{padding-left:50px}
+  .step-desc{color:#94a3b8;font-size:14px;line-height:1.7;margin-bottom:16px}
+
+  /* 代码块 */
+  .code-block{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:16px;font-family:'Courier New',monospace;font-size:13px;color:#a5b4fc;overflow-x:auto;margin-bottom:12px;position:relative}
+  .code-block .copy-btn{position:absolute;top:10px;right:10px;background:#334155;border:none;color:#94a3b8;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px}
+  .code-block .copy-btn:hover{background:#4b5563;color:#e2e8f0}
+
+  /* 操作按钮 */
+  .action-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .btn-primary{background:#6366f1;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none;transition:background .2s}
+  .btn-primary:hover{background:#4f46e5}
+  .btn-secondary{background:#334155;color:#e2e8f0;border:none;padding:10px 20px;border-radius:8px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none;transition:background .2s}
+  .btn-secondary:hover{background:#475569}
+  .btn-done{background:#166534;color:#86efac;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+
+  /* Checkbox 风格确认 */
+  .confirm-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;cursor:pointer}
+  .confirm-row input[type=checkbox]{width:18px;height:18px;accent-color:#6366f1;cursor:pointer}
+  .confirm-row label{font-size:14px;color:#cbd5e1;cursor:pointer}
+
+  /* 提示框 */
+  .tip{background:#1e3a5f;border-left:3px solid #3b82f6;border-radius:8px;padding:12px 16px;font-size:13px;color:#bfdbfe;line-height:1.6;margin-bottom:12px}
+  .warning{background:#2d1515;border-left:3px solid #ef4444;border-radius:8px;padding:12px 16px;font-size:13px;color:#fca5a5;line-height:1.6;margin-bottom:12px}
+  .success-msg{background:#0f2e1a;border-left:3px solid #22c55e;border-radius:8px;padding:12px 16px;font-size:13px;color:#86efac;line-height:1.6;margin-bottom:12px;display:none}
+  .step.done .success-msg{display:block}
+
+  /* 架构图 */
+  .arch-diagram{background:#0f172a;border:1px solid #334155;border-radius:12px;padding:20px;text-align:center;margin-bottom:16px;font-size:13px;color:#94a3b8;line-height:2}
+  .arch-box{display:inline-block;background:#1e293b;border:1px solid #4b5563;border-radius:8px;padding:6px 14px;margin:4px;font-weight:600}
+  .arch-box.blue{border-color:#6366f1;color:#a5b4fc}
+  .arch-box.green{border-color:#22c55e;color:#86efac}
+  .arch-box.yellow{border-color:#f59e0b;color:#fcd34d}
+  .arch-arrow{color:#4b5563}
+
+  /* 文件树 */
+  .file-tree{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:16px;font-family:monospace;font-size:13px;line-height:2;margin-bottom:12px}
+  .ft-dir{color:#fbbf24}
+  .ft-file{color:#86efac}
+  .ft-note{color:#4b5563}
+
+  /* 手机安装截图说明 */
+  .install-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+  .install-step{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:14px;text-align:center}
+  .install-step .emoji{font-size:28px;display:block;margin-bottom:8px}
+  .install-step .label{font-size:12px;color:#94a3b8;line-height:1.5}
+
+  /* 竖向时间轴（总览） */
+  .timeline{border-left:2px solid #334155;padding-left:20px;margin-bottom:32px}
+  .tl-item{margin-bottom:16px;position:relative}
+  .tl-item::before{content:'';position:absolute;left:-25px;top:6px;width:10px;height:10px;border-radius:50%;background:#334155;border:2px solid #1e293b}
+  .tl-item.done::before{background:#22c55e}
+  .tl-item.active::before{background:#6366f1;box-shadow:0 0 0 4px rgba(99,102,241,.2)}
+  .tl-time{font-size:12px;color:#6366f1;font-weight:600;margin-bottom:2px}
+  .tl-title{font-size:15px;font-weight:600;color:#e2e8f0}
+  .tl-sub{font-size:13px;color:#64748b}
+
+  /* 完成横幅 */
+  .complete-banner{display:none;background:linear-gradient(135deg,#166534,#14532d);border:1.5px solid #22c55e;border-radius:16px;padding:28px;text-align:center;margin-top:32px}
+  .complete-banner.show{display:block;animation:fadeIn .5s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  .complete-banner h2{font-size:24px;color:#86efac;margin-bottom:8px}
+  .complete-banner p{color:#4ade80;font-size:15px;line-height:1.7}
+
+  @media(max-width:600px){
+    body{padding:16px 12px}
+    h1{font-size:22px}
+    .step-body{padding-left:0}
+    .install-steps{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- 标题 -->
+  <h1>🚀 Phase 3 部署指南</h1>
+  <p class="subtitle">从本地代码 → Supabase 云数据库 → Vercel 公网部署 → 手机 PWA 安装，全程约 15 分钟</p>
+
+  <!-- 进度 -->
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-text" id="progressText">0 / 5 完成</div>
+
+  <!-- 架构总览 -->
+  <div class="arch-diagram">
+    <div style="margin-bottom:8px;font-weight:600;color:#e2e8f0">📐 系统架构总览</div>
+    <div>
+      <span class="arch-box blue">📱 手机 App (PWA)</span>
+      <span class="arch-arrow"> ⟺ </span>
+      <span class="arch-box blue">💻 Web 浏览器</span>
+    </div>
+    <div style="font-size:18px;margin:4px 0">↕</div>
+    <div>
+      <span class="arch-box green">☁️ Vercel CDN (静态托管)</span>
+    </div>
+    <div style="font-size:18px;margin:4px 0">↕</div>
+    <div>
+      <span class="arch-box yellow">🗄️ Supabase (PostgreSQL + Auth + Realtime)</span>
+    </div>
+    <div style="margin-top:12px;font-size:12px">← 全程 HTTPS · 数据行级安全(RLS) · 跨设备实时同步 →</div>
+  </div>
+
+  <!-- ========================= STEP 1 ========================= -->
+  <div class="step active" id="step1">
+    <div class="step-header" onclick="toggleStep(1)">
+      <div class="step-num" id="stepNum1">1</div>
+      <div class="step-title">注册 Supabase 并创建数据库</div>
+      <div class="step-badge" id="stepBadge1">⏱ 约 5 分钟</div>
+    </div>
+    <div class="step-body" id="stepBody1">
+      <p class="step-desc">Supabase 是免费的开源 BaaS（后端即服务），提供 PostgreSQL 数据库 + 用户认证 + 实时订阅。免费套餐完全够个人使用（500MB 数据库、50,000 月活用户）。</p>
+      
+      <div class="action-row">
+        <a class="btn-primary" href="https://supabase.com" target="_blank">🌐 打开 Supabase 官网</a>
+      </div>
+
+      <p class="step-desc" style="margin-top:8px">操作步骤：</p>
+
+      <div class="confirm-row">
+        <input type="checkbox" id="c1a" onchange="checkStepConfirm(1)">
+        <label for="c1a">① 点「Start your project」→ 用 GitHub 登录（推荐）</label>
+      </div>
+      <div class="confirm-row">
+        <input type="checkbox" id="c1b" onchange="checkStepConfirm(1)">
+        <label for="c1b">② 点「New project」→ 填写项目名（如 fund-dashboard）→ 设置数据库密码（保存好！）→ 选择 Singapore 区域 → Create</label>
+      </div>
+      <div class="confirm-row">
+        <input type="checkbox" id="c1c" onchange="checkStepConfirm(1)">
+        <label for="c1c">③ 等待约 1-2 分钟项目初始化完成</label>
+      </div>
+
+      <div class="tip">💡 区域选「Singapore（ap-southeast-1）」延迟最低，免费套餐限制：数据库 500MB、每月 50k 活跃用户。</div>
+      <div class="success-msg">✅ Supabase 项目已创建</div>
+    </div>
+  </div>
+
+  <!-- ========================= STEP 2 ========================= -->
+  <div class="step" id="step2">
+    <div class="step-header" onclick="toggleStep(2)">
+      <div class="step-num" id="stepNum2">2</div>
+      <div class="step-title">执行 SQL 脚本建表</div>
+      <div class="step-badge" id="stepBadge2">⏱ 约 2 分钟</div>
+    </div>
+    <div class="step-body" id="stepBody2" style="display:none">
+      <p class="step-desc">在 Supabase SQL Editor 中依次执行两个文件，创建数据表结构和安全策略。</p>
+
+      <div class="action-row">
+        <a class="btn-primary" href="https://supabase.com/dashboard" target="_blank">🗄️ 打开 Supabase Dashboard</a>
+      </div>
+
+      <p class="step-desc" style="margin-top:8px">操作步骤：</p>
+      
+      <div class="confirm-row">
+        <input type="checkbox" id="c2a" onchange="checkStepConfirm(2)">
+        <label for="c2a">① 左侧菜单点「SQL Editor」→ 点「New query」</label>
+      </div>
+      <div class="confirm-row">
+        <input type="checkbox" id="c2b" onchange="checkStepConfirm(2)">
+        <label for="c2b">② 打开本地文件 <code style="background:#334155;padding:2px 6px;border-radius:4px">sql/001_schema.sql</code>，全选复制内容，粘贴到 SQL Editor → 点 Run（▶）</label>
+      </div>
+      <div class="confirm-row">
+        <input type="checkbox" id="c2c" onchange="checkStepConfirm(2)">
+        <label for="c2c">③ 再点「New query」→ 打开 <code style="background:#334155;padding:2px 6px;border-radius:4px">sql/002_rls.sql</code>，同样复制粘贴 → Run</label>
+      </div>
+      <div class="confirm-row">
+        <input type="checkbox" id="c2d" onchange="checkStepConfirm(2)">
+        <label for="c2d">④ 左侧点「Table Editor」，确认看到 profiles/accounts/funds/goals/trades 共 5 张表</label>
+      </div>
+
+      <div class="tip">💡 两个 SQL 文件都显示「Success. No rows returned」说明执行成功。如果报错「already exists」也是正常的（表已存在）。</div>
+      <div class="success-msg">✅ 数据库表结构已创建</div>
+    </div>
+  </div>
+
+  <!-- ========================= STEP 3 ========================= -->
+  <div class="step" id="step3">
+    <div class="step-header" onclick="toggleStep(3)">
+      <div class="step-num" id="stepNum3">3</div>
+      <div class="step-title">获取密钥并配置 config.js</div>
+      <div class="step-badge" id="stepBadge3">⏱ 约 2 分钟</div>
+    </div>
+    <div class="step-body" id="stepBody3" style="display:none">
+      <p class="step-desc">Supabase 提供两个密钥：Project URL（项目地址）和 anon key（匿名公钥）。这两个值需要填入本地的 <code style="background:#334155;padding:2px 6px;border-radius:4px">src/config.js</code> 文件。</p>
+
+      <div class="action-row">
+        <a class="btn-primary" href="https://supabase.com/dashboard" target="_blank">🔑 打开 API 设置页</a>
+      </div>
+
+      <p class="step-desc" style="margin-top:8px">操作步骤：</p>
+      
+      <div class="confirm-row">
+        <input type="checkbox" id="c3a" onchange="checkStepConfirm(3)">
+        <label for="c3a">① 在 Supabase Dashboard 左侧点「Settings」→「API」</label>
+      </div>
+      <div class="confirm-row">
+        <input type="checkbox" id="c3b" onchange="checkStepConfirm(3)">
+        <label for="c3b">② 复制「Project URL」（格式：https://xxx.supabase.co）</label>
+      </div>
+      <div class="confirm-row">
+        <input type="checkbox" id="c3c" onchange="checkStepConfirm(3)">
+        <label for="c3c">③ 复制「Project API Keys → anon public」（一长串 JWT）</label>
+      </div>
+      <div class="confirm-row">
+        <input type="checkbox" id="c3d" onchange="checkStepConfirm(3)">
+        <label for="c3d">④ 用文本编辑器打开 <code style="background:#334155;padding:2px 6px;border-radius:4px">src/config.js</code>，替换下方两个占位符：</label>
+      </div>
+
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this, 'code3')">复制</button>
+        <pre id="code3">// src/config.js — 填入你的真实值
+const SUPABASE_CONFIG = {
+  url: 'https://你的项目ID.supabase.co',  // ← 替换这里
+  anonKey: '你的anon公钥...'               // ← 替换这里
+};</pre>
+      </div>
+
+      <div class="warning">⚠️ <strong>anon key 是公钥</strong>，可以放在前端代码里（有 RLS 保护）。但不要暴露 <code>service_role</code> key（管理员权限，绝对不能出现在前端）。</div>
+      <div class="success-msg">✅ config.js 配置完成</div>
+    </div>
+  </div>
+
+  <!-- ========================= STEP 4 ========================= -->
+  <div class="step" id="step4">
+    <div class="step-header" onclick="toggleStep(4)">
+      <div class="step-num" id="stepNum4">4</div>
+      <div class="step-title">部署到 Vercel（公网访问）</div>
+      <div class="step-badge" id="stepBadge4">⏱ 约 3 分钟</div>
+    </div>
+    <div class="step-body" id="stepBody4" style="display:none">
+      <p class="step-desc">Vercel 是最简单的静态站点托管平台，免费套餐支持自定义域名 + HTTPS，PWA 和 Service Worker 都需要 HTTPS 才能工作。</p>
+
+      <p class="step-desc" style="color:#fcd34d;font-weight:600">方式 A：GitHub 自动部署（推荐）</p>
+      
+      <div class="confirm-row">
+        <input type="checkbox" id="c4a" onchange="checkStepConfirm(4)">
+        <label for="c4a">① 把整个项目文件夹上传到 GitHub（私有仓库）</label>
+      </div>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this, 'code4a')">复制</button>
+        <pre id="code4a">cd 项目文件夹路径
+git init
+git add .
+git commit -m "init: fund dashboard PWA"
+git remote add origin https://github.com/你的用户名/fund-dashboard.git
+git push -u origin main</pre>
+      </div>
+      <div class="confirm-row">
+        <input type="checkbox" id="c4b" onchange="checkStepConfirm(4)">
+        <label for="c4b">② 去 <a href="https://vercel.com" target="_blank" style="color:#a5b4fc">vercel.com</a> 用 GitHub 登录 → New Project → 导入你的仓库</label>
+      </div>
+      <div class="confirm-row">
+        <input type="checkbox" id="c4c" onchange="checkStepConfirm(4)">
+        <label for="c4c">③ Framework Preset 选「Other」，Root Directory 不变 → Deploy</label>
+      </div>
+      <div class="confirm-row">
+        <input type="checkbox" id="c4d" onchange="checkStepConfirm(4)">
+        <label for="c4d">④ 等 30 秒部署完成，拿到网址如 <code style="background:#334155;padding:2px 6px;border-radius:4px">https://fund-dashboard.vercel.app</code></label>
+      </div>
+
+      <div style="border-top:1px solid #334155;margin:16px 0"></div>
+      <p class="step-desc" style="color:#fcd34d;font-weight:600">方式 B：拖拽上传（最简单，无需 GitHub）</p>
+      
+      <div class="action-row">
+        <a class="btn-secondary" href="https://vercel.com/new" target="_blank">📂 打开 Vercel 上传页</a>
+      </div>
+      <p class="step-desc">直接把整个项目文件夹拖到 Vercel 网页上，等待上传完成即可。日后更新需要重新拖拽。</p>
+
+      <div class="tip">💡 Vercel 免费版限制：100GB/月流量、10GB 存储、Serverless Functions 100k 次/月。个人使用完全够。</div>
+      <div class="success-msg">✅ 已部署到 Vercel，获得公网 HTTPS 网址</div>
+    </div>
+  </div>
+
+  <!-- ========================= STEP 5 ========================= -->
+  <div class="step" id="step5">
+    <div class="step-header" onclick="toggleStep(5)">
+      <div class="step-num" id="stepNum5">5</div>
+      <div class="step-title">注册账号 + 安装为手机 App（PWA）</div>
+      <div class="step-badge" id="stepBadge5">⏱ 约 3 分钟</div>
+    </div>
+    <div class="step-body" id="stepBody5" style="display:none">
+      <p class="step-desc">部署完成后，首先注册账号激活云端同步，再在手机上安装为 PWA，之后像原生 App 一样打开使用。</p>
+
+      <p class="step-desc" style="color:#fcd34d;font-weight:600">① 注册账号</p>
+      <div class="confirm-row">
+        <input type="checkbox" id="c5a" onchange="checkStepConfirm(5)">
+        <label for="c5a">用手机浏览器打开 Vercel 分配的 HTTPS 网址，会自动跳转到登录页 → 点「注册」→ 填邮箱密码 → 查收邮件点确认链接</label>
+      </div>
+
+      <p class="step-desc" style="margin-top:16px;color:#fcd34d;font-weight:600">② iPhone / iPad 安装（Safari 必须）</p>
+      <div class="install-steps">
+        <div class="install-step">
+          <span class="emoji">📱</span>
+          <div class="label">Safari 打开网址</div>
+        </div>
+        <div class="install-step">
+          <span class="emoji">📤</span>
+          <div class="label">点底部「分享」按钮</div>
+        </div>
+        <div class="install-step">
+          <span class="emoji">➕</span>
+          <div class="label">滚动找「添加到主屏幕」</div>
+        </div>
+        <div class="install-step">
+          <span class="emoji">✅</span>
+          <div class="label">点「添加」，App 出现在桌面</div>
+        </div>
+      </div>
+
+      <p class="step-desc" style="color:#fcd34d;font-weight:600">③ Android 安装（Chrome）</p>
+      <div class="install-steps">
+        <div class="install-step">
+          <span class="emoji">🌐</span>
+          <div class="label">Chrome 打开网址</div>
+        </div>
+        <div class="install-step">
+          <span class="emoji">📲</span>
+          <div class="label">底部会弹出「安装」横幅 或 点地址栏右侧 ⊕ 图标</div>
+        </div>
+        <div class="install-step">
+          <span class="emoji">📥</span>
+          <div class="label">点「安装」按钮</div>
+        </div>
+        <div class="install-step">
+          <span class="emoji">✅</span>
+          <div class="label">像原生 App 一样从桌面打开</div>
+        </div>
+      </div>
+
+      <div class="confirm-row">
+        <input type="checkbox" id="c5b" onchange="checkStepConfirm(5)">
+        <label for="c5b">已注册账号并登录成功</label>
+      </div>
+      <div class="confirm-row">
+        <input type="checkbox" id="c5c" onchange="checkStepConfirm(5)">
+        <label for="c5c">已在手机上安装为 PWA（主屏幕有图标）</label>
+      </div>
+
+      <div class="tip">💡 安装后数据存在 Supabase 云端，手机 App 和电脑 Web 端数据实时同步（Realtime WebSocket）。</div>
+      <div class="success-msg">✅ PWA 安装完成，随时桌面打开！</div>
+    </div>
+  </div>
+
+  <!-- ========================= 完成横幅 ========================= -->
+  <div class="complete-banner" id="completeBanner">
+    <div style="font-size:48px;margin-bottom:12px">🎉</div>
+    <h2>部署完成！</h2>
+    <p>Web 端 + 手机 App + 云同步 全部就绪<br>
+    打开仪表盘，登录账号，开始使用吧！</p>
+    <div style="margin-top:20px">
+      <a class="btn-primary" href="./portfolio-rebalance-dashboard.html" style="text-decoration:none">📊 打开仪表盘</a>
+    </div>
+  </div>
+
+  <!-- ========================= 常见问题 ========================= -->
+  <div style="margin-top:32px">
+    <h3 style="font-size:18px;margin-bottom:16px;color:#94a3b8">❓ 常见问题</h3>
+    
+    <div style="background:#1e293b;border-radius:12px;padding:20px;margin-bottom:12px">
+      <p style="font-weight:600;margin-bottom:8px;color:#fbbf24">Q：双击打开 HTML 文件，数据不同步？</p>
+      <p style="font-size:14px;color:#94a3b8">正常现象。<code>file://</code> 协议无法使用 Service Worker 和跨域 API（Supabase）。必须部署到 HTTPS 才能使用云同步。本地预览可用 <code>npx serve .</code> 起本地服务器。</p>
+    </div>
+    
+    <div style="background:#1e293b;border-radius:12px;padding:20px;margin-bottom:12px">
+      <p style="font-weight:600;margin-bottom:8px;color:#fbbf24">Q：iOS Safari 不弹出安装提示？</p>
+      <p style="font-size:14px;color:#94a3b8">iOS PWA 只能通过「分享 → 添加到主屏幕」安装，不会自动弹出。必须用 Safari 浏览器（Chrome/微信内置浏览器在 iOS 上不支持 PWA 安装）。</p>
+    </div>
+    
+    <div style="background:#1e293b;border-radius:12px;padding:20px;margin-bottom:12px">
+      <p style="font-weight:600;margin-bottom:8px;color:#fbbf24">Q：Vercel 部署后修改了代码怎么更新？</p>
+      <p style="font-size:14px;color:#94a3b8">如果用 GitHub 方式，<code>git push</code> 后 Vercel 自动触发重新部署（约 30 秒）。如果用拖拽方式，重新拖拽新版本文件夹到 Vercel 即可。</p>
+    </div>
+
+    <div style="background:#1e293b;border-radius:12px;padding:20px;margin-bottom:12px">
+      <p style="font-weight:600;margin-bottom:8px;color:#fbbf24">Q：config.js 里的 anon key 暴露在前端安全吗？</p>
+      <p style="font-size:14px;color:#94a3b8">安全。anon key 配合 RLS（行级安全）使用，每个用户只能访问自己的数据。这是 Supabase 的标准使用方式，官方文档也建议如此。绝对不要使用 <code>service_role</code> key 放前端。</p>
+    </div>
+
+    <div style="background:#1e293b;border-radius:12px;padding:20px">
+      <p style="font-weight:600;margin-bottom:8px;color:#fbbf24">Q：想用自定义域名（如 fund.example.com）？</p>
+      <p style="font-size:14px;color:#94a3b8">在 Vercel 项目设置 → Domains 里添加你的域名，按提示配置 DNS CNAME 记录指向 Vercel，等待 DNS 生效即可（通常 5-10 分钟）。</p>
+    </div>
+  </div>
+
+  <!-- 项目文件结构 -->
+  <div style="margin-top:32px">
+    <h3 style="font-size:18px;margin-bottom:16px;color:#94a3b8">📁 项目文件结构</h3>
+    <div class="file-tree">
+<span class="ft-dir">fund-dashboard/</span>
+├── <span class="ft-file">portfolio-rebalance-dashboard.html</span>  <span class="ft-note">← 主仪表盘（核心）</span>
+├── <span class="ft-file">login.html</span>                          <span class="ft-note">← 登录/注册页</span>
+├── <span class="ft-file">manifest.json</span>                       <span class="ft-note">← PWA 配置</span>
+├── <span class="ft-file">sw.js</span>                               <span class="ft-note">← Service Worker（离线缓存）</span>
+├── <span class="ft-dir">src/</span>
+│   ├── <span class="ft-file">config.js</span>                       <span class="ft-note">← ⚠️ 填入 Supabase 密钥</span>
+│   ├── <span class="ft-file">supabase.js</span>                     <span class="ft-note">← Supabase 客户端</span>
+│   ├── <span class="ft-file">auth.js</span>                         <span class="ft-note">← 登录认证</span>
+│   ├── <span class="ft-file">data-layer.js</span>                   <span class="ft-note">← 数据库 CRUD</span>
+│   ├── <span class="ft-file">realtime.js</span>                     <span class="ft-note">← 实时同步</span>
+│   └── <span class="ft-file">app-init.js</span>                     <span class="ft-note">← 应用初始化入口</span>
+├── <span class="ft-dir">icons/</span>
+│   ├── <span class="ft-file">icon-192.svg</span>                    <span class="ft-note">← App 图标（小）</span>
+│   └── <span class="ft-file">icon-512.svg</span>                    <span class="ft-note">← App 图标（大）</span>
+└── <span class="ft-dir">sql/</span>
+    ├── <span class="ft-file">001_schema.sql</span>                  <span class="ft-note">← 建表 SQL</span>
+    └── <span class="ft-file">002_rls.sql</span>                     <span class="ft-note">← 安全策略 SQL</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// 步骤展开/收起
+function toggleStep(n) {
+  var body = document.getElementById('stepBody' + n);
+  body.style.display = body.style.display === 'none' ? '' : 'none';
+}
+
+// 检查步骤勾选情况
+function checkStepConfirm(stepNum) {
+  var checkboxes = document.querySelectorAll('[id^=c' + stepNum + ']');
+  var allChecked = Array.from(checkboxes).every(function(cb) { return cb.checked; });
+  
+  if (allChecked) {
+    markStepDone(stepNum);
+    updateProgress();
+    // 自动展开下一步
+    var nextBody = document.getElementById('stepBody' + (stepNum + 1));
+    if (nextBody) {
+      document.getElementById('step' + (stepNum + 1)).classList.add('active');
+      nextBody.style.display = '';
+    }
+  }
+}
+
+function markStepDone(n) {
+  var step = document.getElementById('step' + n);
+  step.classList.remove('active');
+  step.classList.add('done');
+  document.getElementById('stepNum' + n).textContent = '✓';
+  document.getElementById('stepBadge' + n).textContent = '✅ 已完成';
+}
+
+function updateProgress() {
+  var doneCount = document.querySelectorAll('.step.done').length;
+  var total = 5;
+  var pct = Math.round(doneCount / total * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = doneCount + ' / ' + total + ' 完成  (' + pct + '%)';
+  if (doneCount === total) {
+    document.getElementById('completeBanner').classList.add('show');
+  }
+}
+
+// 复制代码
+function copyCode(btn, codeId) {
+  var code = document.getElementById(codeId);
+  if (!code) return;
+  navigator.clipboard.writeText(code.textContent).then(function() {
+    btn.textContent = '已复制✓';
+    setTimeout(function() { btn.textContent = '复制'; }, 2000);
+  }).catch(function() {
+    btn.textContent = '复制失败';
+    setTimeout(function() { btn.textContent = '复制'; }, 2000);
+  });
+}
+</script>
+</body>
+</html>

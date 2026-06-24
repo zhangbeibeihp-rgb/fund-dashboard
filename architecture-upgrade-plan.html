@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>架构升级方案 v2 · 个人版 · Web+APP 数据互通</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;background:#0f172a;color:#e2e8f0;padding:20px;max-width:1100px;margin:0 auto}
+h1{font-size:26px;font-weight:700;background:linear-gradient(135deg,#22c55e,#6366f1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.subtitle{color:#94a3b8;font-size:13px;margin-bottom:24px}
+.section{background:#1e293b;border-radius:14px;padding:22px;margin-bottom:16px;border:1px solid #334155}
+.section-title{font-size:17px;font-weight:600;color:#4ade80;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.section-title .icon{font-size:20px}
+.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600}
+.badge-green{background:#22c55e20;color:#4ade80;border:1px solid #22c55e40}
+
+/* 需求对比 */
+.diff-table{width:100%;border-collapse:collapse;font-size:13px}
+.diff-table th{text-align:left;padding:8px 12px;background:#0f172a;color:#818cf8;font-weight:600;border-bottom:1px solid #334155}
+.diff-table td{padding:8px 12px;border-bottom:1px solid #1e293b;color:#cbd5e1}
+.diff-table .removed{color:#f87171;text-decoration:line-through;opacity:.6}
+.diff-table .added{color:#4ade80;font-weight:600}
+.diff-table .kept{color:#94a3b8}
+
+/* 方案卡 */
+.plan-card{background:linear-gradient(135deg,#1e293b,#0f172a);border-radius:14px;padding:24px;border:2px solid #22c55e40;margin-bottom:16px}
+.plan-card h2{font-size:20px;color:#4ade80;margin-bottom:10px}
+.plan-card p{font-size:14px;color:#cbd5e1;line-height:1.7;margin-bottom:6px}
+
+/* 架构图 */
+.arch-diagram{background:#0f172a;border-radius:12px;padding:18px;font-family:'Courier New',monospace;font-size:12px;line-height:1.8;color:#94a3b8;overflow-x:auto;white-space:pre}
+.arch-diagram .hi{color:#4ade80}
+.arch-diagram .warn{color:#fbbf24}
+.arch-diagram .dim{color:#64748b}
+
+/* 技术栈 */
+.tech-table{width:100%;border-collapse:collapse;font-size:13px}
+.tech-table th{text-align:left;padding:8px 12px;background:#0f172a;color:#818cf8;font-weight:600;border-bottom:1px solid #334155}
+.tech-table td{padding:8px 12px;border-bottom:1px solid #1e293b}
+.tech-table .layer{font-weight:600;color:#a78bfa;width:120px}
+
+/* 数据同步 */
+.sync-flow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;padding:20px 0}
+.sync-node{background:#0f172a;border:2px solid #334155;border-radius:12px;padding:14px 20px;text-align:center;min-width:130px}
+.sync-node.active{border-color:#22c55e;box-shadow:0 0 12px #22c55e15}
+.sync-node .icon{font-size:28px;margin-bottom:6px}
+.sync-node .name{font-size:13px;font-weight:600;color:#e2e8f0}
+.sync-node .desc{font-size:11px;color:#94a3b8;margin-top:2px}
+.sync-arrow{font-size:20px;color:#475569}
+.sync-arrow双向{color:#4ade80}
+
+/* 路线图 */
+.roadmap{position:relative;padding-left:28px}
+.roadmap::before{content:'';position:absolute;left:9px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,#22c55e,#6366f1)}
+.phase{position:relative;margin-bottom:20px}
+.phase::before{content:'';position:absolute;left:-24px;top:4px;width:12px;height:12px;border-radius:50%;border:3px solid;background:#0f172a}
+.phase.p1::before{border-color:#22c55e}
+.phase.p2::before{border-color:#6366f1}
+.phase.p3::before{border-color:#fbbf24}
+.phase-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.phase-label{font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px}
+.phase-label.p1{background:#22c55e20;color:#4ade80}
+.phase-label.p2{background:#6366f120;color:#818cf8}
+.phase-label.p3{background:#fbbf2420;color:#fbbf24}
+.phase-title{font-size:14px;font-weight:600}
+.phase-week{font-size:12px;color:#94a3b8;margin-left:auto}
+.phase-body{font-size:13px;color:#cbd5e1}
+.phase-body .task{padding:2px 0;display:flex;gap:8px;align-items:flex-start}
+.phase-body .task::before{content:'○';color:#475569;flex-shrink:0}
+.phase-body .task.done::before{content:'✓';color:#22c55e}
+
+/* 成本 */
+.cost-row{display:flex;gap:12px;flex-wrap:wrap}
+.cost-card{flex:1;min-width:140px;background:#0f172a;border-radius:10px;padding:14px;text-align:center;border:1px solid #334155}
+.cost-card .amount{font-size:22px;font-weight:700;color:#4ade80}
+.cost-card .label{font-size:12px;color:#94a3b8;margin-top:4px}
+.cost-card .detail{font-size:11px;color:#64748b;margin-top:4px}
+
+/* 对比旧方案 */
+.vs-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:768px){.vs-grid{grid-template-columns:1fr}}
+.vs-card{background:#0f172a;border-radius:10px;padding:16px;border:1px solid #334155}
+.vs-card.old{border-color:#f8717140;opacity:.7}
+.vs-card.new{border-color:#22c55e40}
+.vs-card h4{font-size:14px;margin-bottom:8px}
+.vs-card.old h4{color:#f87171}
+.vs-card.new h4{color:#4ade80}
+.vs-card ul{list-style:none;padding:0;font-size:12px}
+.vs-card li{padding:2px 0;color:#94a3b8}
+.vs-card.new li{color:#cbd5e1}
+
+/* 注意事项 */
+.warn-box{background:#f9731615;border:1px solid #f9731640;border-radius:10px;padding:14px;margin-top:12px}
+.warn-box p{font-size:13px;color:#fbbf24;line-height:1.6}
+</style>
+</head>
+<body>
+
+<h1>🏗️ 架构升级方案 v2 · 个人版</h1>
+<p class="subtitle">仅个人使用 · Web + APP · 数据互通 · 2026-06-23</p>
+
+<!-- 需求变更 -->
+<div class="section">
+  <div class="section-title"><span class="icon">🔄</span> 需求调整对比</div>
+  <table class="diff-table">
+    <thead>
+      <tr><th>维度</th><th>旧方案 v1</th><th>新方案 v2</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>用户规模</td>
+        <td class="removed">面向公众 / 1000+ 用户</td>
+        <td class="added">仅个人使用</td>
+      </tr>
+      <tr>
+        <td>终端</td>
+        <td class="removed">PWA + 微信小程序（双端开发）</td>
+        <td class="added">PWA 一套代码 = Web + APP</td>
+      </tr>
+      <tr>
+        <td>数据互通</td>
+        <td class="kept">需要（跨端同步）</td>
+        <td class="added">需要（Web ↔ APP 自动同步）</td>
+      </tr>
+      <tr>
+        <td>合规要求</td>
+        <td class="removed">完整金融合规（ICP备案/等保三级/金融科技备案）</td>
+        <td class="added">个人使用无需备案（基础隐私保护即可）</td>
+      </tr>
+      <tr>
+        <td>认证系统</td>
+        <td class="removed">手机号+验证码 / 微信登录 / 实名认证</td>
+        <td class="added">单账号密码登录（仅自己用）</td>
+      </tr>
+      <tr>
+        <td>后端</td>
+        <td class="removed">Supabase + 微信云开发（双后端）</td>
+        <td class="added">Supabase 一个后端搞定</td>
+      </tr>
+      <tr>
+        <td>工期</td>
+        <td class="removed">12-16 周</td>
+        <td class="added">1-2 周</td>
+      </tr>
+      <tr>
+        <td>月成本</td>
+        <td class="removed">¥200-5000+</td>
+        <td class="added">¥0（免费额度内）</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 新方案对比 -->
+<div class="section">
+  <div class="section-title"><span class="icon">⚡</span> v1 vs v2 方案对比</div>
+  <div class="vs-grid">
+    <div class="vs-card old">
+      <h4>❌ v1 旧方案（过度设计）</h4>
+      <ul>
+        <li>· 双端开发（Web + 小程序）</li>
+        <li>· 双后端（Supabase + 云开发）</li>
+        <li>· 13项合规清单</li>
+        <li>· 等保二级→三级测评</li>
+        <li>· 实名认证 + 风险测评</li>
+        <li>· 4阶段 12-16周</li>
+        <li>· ICP备案 7-20天等待</li>
+        <li>· 微信支付接入</li>
+        <li>· 渗透测试 + 安全审计</li>
+        <li>· 月成本 ¥200-5000+</li>
+      </ul>
+    </div>
+    <div class="vs-card new">
+      <h4>✅ v2 新方案（精准匹配）</h4>
+      <ul>
+        <li>· PWA 一套代码 = Web + APP</li>
+        <li>· Supabase 单后端</li>
+        <li>· 个人用无需任何备案</li>
+        <li>· 无需等保测评</li>
+        <li>· 单账号密码登录</li>
+        <li>· 3阶段 1-2周</li>
+        <li>· 无需等待，直接开发</li>
+        <li>· 无需支付</li>
+        <li>· Supabase 自带安全</li>
+        <li>· 月成本 ¥0</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 推荐方案 -->
+<div class="plan-card">
+  <h2>🎯 推荐方案：PWA + Supabase · 一套代码双端运行</h2>
+  <p><strong>核心思路：</strong>现有 HTML 升级为 PWA，安装到手机桌面就是"APP"，用浏览器打开就是"Web"。两端共享同一个 Supabase 后端，数据自动实时同步。</p>
+  <p><strong>为什么 PWA 而不是原生 APP？</strong></p>
+  <p>• 个人使用无需上架应用商店（省 $99/年 Apple 开发者 + $25 Google Play）<br>
+     • 不用学 Flutter/React Native，现有 HTML 直接用<br>
+     • 装到手机桌面后有图标、全屏、推送通知，体验接近原生 APP<br>
+     • 数据天然互通——同一个后端，Web 和 APP 看到的是同一份数据</p>
+</div>
+
+<!-- 架构图 -->
+<div class="section">
+  <div class="section-title"><span class="icon">📐</span> 架构图（极简版）</div>
+  <div class="arch-diagram">
+<span class="dim">┌──────────────────────────────────────────────────────┐</span>
+<span class="dim">│              你（一个人，两个入口）                     │</span>
+<span class="dim">├────────────────────┬─────────────────────────────────┤</span>
+│  💻 电脑浏览器       │  📱 手机桌面 APP（PWA安装）        │
+│  打开网址 = Web版    │  点图标 = APP版                   │
+<span class="dim">│  ──────────────    │  ──────────────────────          │</span>
+<span class="dim">│       \            │            /                     │</span>
+<span class="dim">│        \           │           /                      │</span>
+<span class="dim">│         \          │          /                       │</span>
+<span class="dim">│          ▼         ▼         ▼                        │</span>
+<span class="dim">├──────────────────────────────────────────────────────┤</span>
+<span class="dim">│         同一套代码（portfolio-dashboard.html）          │</span>
+<span class="dim">│         PWA：可安装、可离线、可推送                      │</span>
+<span class="dim">├──────────────────────────────────────────────────────┤</span>
+<span class="dim">│                      │                                │</span>
+<span class="dim">│                      ▼                                │</span>
+<span class="dim">│          🔐 Supabase Auth（密码登录）                   │</span>
+<span class="dim">│          只有你自己一个账号                               │</span>
+<span class="dim">│                      │                                │</span>
+<span class="dim">│                      ▼                                │</span>
+<span class="dim">│          📦 Supabase PostgreSQL                        │</span>
+<span class="dim">│          ┌─────────────────────────┐                   │</span>
+<span class="dim">│          │ portfolios  (持仓数据)   │                   │</span>
+<span class="dim">│          │ transactions(交易记录)   │                   │</span>
+<span class="dim">│          │ goals       (投资目标)   │                   │</span>
+<span class="dim">│          │ risk_profile(风险偏好)   │                   │</span>
+<span class="dim">│          └─────────────────────────┘                   │</span>
+<span class="dim">│                      │                                │</span>
+<span class="dim">│                      ▼                                │</span>
+<span class="dim">│          🔄 Realtime 实时同步                           │</span>
+<span class="dim">│          电脑改了 → 手机秒级看到                         │</span>
+<span class="dim">│          手机改了 → 电脑秒级看到                         │</span>
+<span class="dim">└──────────────────────────────────────────────────────┘</span>
+
+<span class="dim">           ┌─────────────────────────┐</span>
+<span class="warn">           │  📡 外部数据源（可选）    │</span>
+<span class="dim">           │  天天基金API → 净值更新   │</span>
+<span class="dim">           │  通义千问API → AI建议     │</span>
+<span class="dim">           └─────────────────────────┘</span>
+  </div>
+</div>
+
+<!-- 数据同步 -->
+<div class="section">
+  <div class="section-title"><span class="icon">🔄</span> 数据互通方案</div>
+  <div class="sync-flow">
+    <div class="sync-node active">
+      <div class="icon">💻</div>
+      <div class="name">Web 端</div>
+      <div class="desc">电脑浏览器</div>
+    </div>
+    <div class="sync-arrow">⇌</div>
+    <div class="sync-node active">
+      <div class="icon">☁️</div>
+      <div class="name">Supabase</div>
+      <div class="desc">云端数据库 + Realtime</div>
+    </div>
+    <div class="sync-arrow">⇌</div>
+    <div class="sync-node active">
+      <div class="icon">📱</div>
+      <div class="name">APP 端</div>
+      <div class="desc">手机 PWA 安装版</div>
+    </div>
+  </div>
+  <table class="tech-table" style="margin-top:8px">
+    <thead>
+      <tr><th>场景</th><th>如何实现</th><th>延迟</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>电脑上加了仓</td><td>写入 Supabase → Realtime 推送 → 手机端自动刷新</td><td>~200ms</td></tr>
+      <tr><td>手机上改了目标</td><td>写入 Supabase → Realtime 推送 → 电脑端自动刷新</td><td>~200ms</td></tr>
+      <tr><td>离线时操作</td><td>本地缓存 → 恢复网络后自动同步</td><td>联网即同步</td></tr>
+      <tr><td>多设备同时编辑</td><td>Supabase 行级锁 + 最后写入胜出</td><td>即时</td></tr>
+      <tr><td>数据备份</td><td>Supabase 自动每日备份 + 手动导出 JSON</td><td>—</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 技术栈 -->
+<div class="section">
+  <div class="section-title"><span class="icon">🛠️</span> 技术栈（极简）</div>
+  <table class="tech-table">
+    <thead>
+      <tr><th>层级</th><th>选型</th><th>为什么</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="layer">前端</td>
+        <td>现有 HTML/JS（已有 3758 行）</td>
+        <td>不重写，直接加 Supabase SDK</td>
+      </tr>
+      <tr>
+        <td class="layer">PWA 化</td>
+        <td>manifest.json + Service Worker</td>
+        <td>已部分完成，补全离线缓存即可</td>
+      </tr>
+      <tr>
+        <td class="layer">认证</td>
+        <td>Supabase Auth（邮箱+密码）</td>
+        <td>就你一个人用，一个账号搞定</td>
+      </tr>
+      <tr>
+        <td class="layer">数据库</td>
+        <td>Supabase PostgreSQL</td>
+        <td>免费 500MB，个人数据绰绰有余</td>
+      </tr>
+      <tr>
+        <td class="layer">实时同步</td>
+        <td>Supabase Realtime</td>
+        <td>内置功能，零配置开启</td>
+      </tr>
+      <tr>
+        <td class="layer">离线缓存</td>
+        <td>Service Worker + IndexedDB</td>
+        <td>断网也能看数据，联网自动同步</td>
+      </tr>
+      <tr>
+        <td class="layer">部署</td>
+        <td>Vercel / Netlify / GitHub Pages</td>
+        <td>免费，自动 HTTPS，推送即部署</td>
+      </tr>
+      <tr>
+        <td class="layer">基金数据</td>
+        <td>天天基金 API（免费非官方）</td>
+        <td>净值/历史数据，个人用够了</td>
+      </tr>
+      <tr>
+        <td class="layer">AI 服务</td>
+        <td>通义千问 API（可选）</td>
+        <td>¥0.02/千token，个人用月费 < ¥1</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 数据库设计 -->
+<div class="section">
+  <div class="section-title"><span class="icon">📦</span> 数据库表设计（4 张表）</div>
+  <div class="arch-diagram">
+<span class="dim">-- Supabase PostgreSQL 建表语句</span>
+
+<span class="hi">-- 1. 持仓表</span>
+CREATE TABLE portfolios (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id     UUID REFERENCES auth.users NOT NULL,
+  fund_code   VARCHAR(10)  NOT NULL,    -- 基金代码
+  fund_name   VARCHAR(100) NOT NULL,    -- 基金名称
+  fund_type   VARCHAR(20)  NOT NULL,    -- mixed/index/stock
+  share       DECIMAL(12,2),            -- 持有份额
+  amount      DECIMAL(12,2),            -- 持仓金额
+  cost_price  DECIMAL(10,4),            -- 成本净值
+  account_name VARCHAR(50) DEFAULT '默认账号',
+  created_at  TIMESTAMPTZ DEFAULT now(),
+  updated_at  TIMESTAMPTZ DEFAULT now()
+);
+
+<span class="hi">-- 2. 交易记录表</span>
+CREATE TABLE transactions (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id     UUID REFERENCES auth.users NOT NULL,
+  fund_code   VARCHAR(10)  NOT NULL,
+  fund_name   VARCHAR(100) NOT NULL,
+  trade_type  VARCHAR(10)  NOT NULL,    -- buy/suy/sell
+  amount      DECIMAL(12,2) NOT NULL,   -- 交易金额
+  share       DECIMAL(12,2),            -- 交易份额
+  nav         DECIMAL(10,4),            -- 成交净值
+  trade_date  DATE NOT NULL,
+  note        TEXT,
+  created_at  TIMESTAMPTZ DEFAULT now()
+);
+
+<span class="hi">-- 3. 投资目标表</span>
+CREATE TABLE goals (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id     UUID REFERENCES auth.users NOT NULL,
+  goal_type   VARCHAR(30)  NOT NULL,    -- retirement/education/housing...
+  goal_name   VARCHAR(100) NOT NULL,
+  target_amount DECIMAL(14,2) NOT NULL, -- 目标金额(元)
+  monthly_invest DECIMAL(12,2) DEFAULT 3000,
+  annual_rate DECIMAL(5,2) DEFAULT 6.0, -- 预期年化
+  end_age     INT DEFAULT 60,
+  is_active   BOOLEAN DEFAULT true,
+  created_at  TIMESTAMPTZ DEFAULT now(),
+  updated_at  TIMESTAMPTZ DEFAULT now()
+);
+
+<span class="hi">-- 4. 风险偏好表（单行）</span>
+CREATE TABLE risk_profile (
+  user_id     UUID REFERENCES auth.users PRIMARY KEY,
+  risk_level  VARCHAR(20) DEFAULT '稳健型', -- 保守/稳健/平衡/进取/激进
+  invest_style VARCHAR(20) DEFAULT 'moderate',
+  updated_at  TIMESTAMPTZ DEFAULT now()
+);
+
+<span class="dim">-- RLS 策略：每个人只能看自己的数据</span>
+<span class="hi">ALTER TABLE portfolios ENABLE ROW LEVEL SECURITY;</span>
+<span class="hi">CREATE POLICY "own_data" ON portfolios</span>
+<span class="hi">  FOR ALL USING (user_id = auth.uid());</span>
+<span class="dim">-- 其余表同理</span>
+  </div>
+</div>
+
+<!-- 路线图 -->
+<div class="section">
+  <div class="section-title"><span class="icon">🗺️</span> 实施路线图（1-2 周）</div>
+  <div class="roadmap">
+
+    <div class="phase p1">
+      <div class="phase-head">
+        <span class="phase-label p1">Phase 1</span>
+        <span class="phase-title">后端搭建 + 认证</span>
+        <span class="phase-week">Day 1-3</span>
+      </div>
+      <div class="phase-body">
+        <div class="task done">P0-P2 Bug 修复（已完成）</div>
+        <div class="task done">PWA 基础支持（已完成）</div>
+        <div class="task">注册 Supabase 账号，创建项目</div>
+        <div class="task">执行建表 SQL（4张表 + RLS策略）</div>
+        <div class="task">创建个人账号（邮箱+密码）</div>
+        <div class="task">HTML 中引入 Supabase JS SDK</div>
+        <div class="task">实现登录页面（仅自己用，简单密码即可）</div>
+      </div>
+    </div>
+
+    <div class="phase p2">
+      <div class="phase-head">
+        <span class="phase-label p2">Phase 2</span>
+        <span class="phase-title">数据迁移 + 实时同步</span>
+        <span class="phase-week">Day 4-7</span>
+      </div>
+      <div class="phase-body">
+        <div class="task">现有硬编码 funds 数据 → 写入 Supabase</div>
+        <div class="task">现有 goals 数据 → 写入 Supabase</div>
+        <div class="task">renderHoldings() 改为从 Supabase 查询</div>
+        <div class="task">renderRebalance() 改为动态查询</div>
+        <div class="task">加减仓操作 → 写入 transactions 表</div>
+        <div class="task">目标修改 → 写入 goals 表</div>
+        <div class="task">接入 Supabase Realtime（数据变更自动刷新）</div>
+        <div class="task">离线缓存：Service Worker + IndexedDB</div>
+      </div>
+    </div>
+
+    <div class="phase p3">
+      <div class="phase-head">
+        <span class="phase-label p3">Phase 3</span>
+        <span class="phase-title">PWA 完善 + 部署上线</span>
+        <span class="phase-week">Day 8-14</span>
+      </div>
+      <div class="phase-body">
+        <div class="task">PWA manifest 完善（图标/名称/主题色）</div>
+        <div class="task">Service Worker 缓存策略（stale-while-revalidate）</div>
+        <div class="task">手机安装引导（"添加到主屏幕"提示）</div>
+        <div class="task">部署到 Vercel（自动 HTTPS + CDN）</div>
+        <div class="task">手机浏览器打开 → 安装到桌面 → 当 APP 用</div>
+        <div class="task">基金净值自动更新（定时拉天天基金API）</div>
+        <div class="task">AI 投资建议接入通义千问（可选）</div>
+        <div class="task">数据导出 JSON 备份功能（已有）</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 成本 -->
+<div class="section">
+  <div class="section-title"><span class="icon">💰</span> 成本估算</div>
+  <div class="cost-row">
+    <div class="cost-card">
+      <div class="amount">¥0</div>
+      <div class="label">Supabase</div>
+      <div class="detail">免费版：500MB DB + 5万次/月 API</div>
+    </div>
+    <div class="cost-card">
+      <div class="amount">¥0</div>
+      <div class="label">Vercel 部署</div>
+      <div class="detail">免费版：100GB 流量/月</div>
+    </div>
+    <div class="cost-card">
+      <div class="amount">¥0</div>
+      <div class="label">天天基金 API</div>
+      <div class="detail">免费非官方接口</div>
+    </div>
+    <div class="cost-card">
+      <div class="amount">~¥1</div>
+      <div class="label">AI 月费（可选）</div>
+      <div class="detail">通义千问，个人用量极低</div>
+    </div>
+  </div>
+  <p style="margin-top:12px;font-size:13px;color:#4ade80">
+    ✅ 总成本：基本为 ¥0/月。个人使用完全在免费额度内。
+  </p>
+</div>
+
+<!-- 注意事项 -->
+<div class="warn-box">
+  <p>⚠️ <strong>个人使用 vs 公开的区别：</strong>这个方案定位是「个人工具」，不对外提供服务。如果未来想开放给他人使用或商业化，需要补：ICP备案、用户协议、风险测评、数据加密审计等合规项。但现阶段个人用，这些都不需要。</p>
+  <p style="margin-top:8px">📌 <strong>数据安全提醒：</strong>虽然是个人使用，但金融数据建议开启 Supabase 的两步验证（2FA），数据库每日自动备份也要确认开启。</p>
+</div>
+
+</body>
+</html>

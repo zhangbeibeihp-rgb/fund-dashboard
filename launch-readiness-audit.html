@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>项目上线审查报告 · 基金组合管理仪表盘 v7.1</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:#0f172a;color:#e2e8f0;padding:20px;min-height:100vh}
+.container{max-width:1200px;margin:0 auto}
+
+/* Header */
+.audit-header{text-align:center;padding:40px 20px 30px;border-bottom:1px solid #1e293b;margin-bottom:30px}
+.audit-header h1{font-size:28px;color:#f1f5f9;margin-bottom:8px}
+.audit-header .subtitle{font-size:14px;color:#64748b}
+.verdict-badge{display:inline-block;padding:8px 28px;border-radius:30px;font-size:16px;font-weight:700;margin-top:16px}
+.verdict-no{background:rgba(239,68,68,.15);color:#f87171;border:2px solid rgba(239,68,68,.3)}
+
+/* Score Section */
+.score-section{display:grid;grid-template-columns:1fr 2fr;gap:24px;margin-bottom:32px}
+.score-gauge{text-align:center;background:#1e293b;border-radius:16px;padding:32px 20px}
+.score-circle{width:160px;height:160px;border-radius:50%;margin:0 auto 16px;position:relative;display:flex;align-items:center;justify-content:center;background:conic-gradient(#ef4444 0deg 112deg,#f59e0b 112deg 180deg,#eab308 180deg 216deg,#84cc16 216deg 252deg,#22c55e 252deg 360deg)}
+.score-inner{width:130px;height:130px;border-radius:50%;background:#1e293b;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-num{font-size:42px;font-weight:800;color:#f87171}
+.score-label{font-size:12px;color:#64748b;margin-top:2px}
+.score-stage{font-size:14px;color:#fbbf24;font-weight:600;margin-top:8px}
+
+.score-breakdown{background:#1e293b;border-radius:16px;padding:24px}
+.score-breakdown h3{font-size:15px;color:#f1f5f9;margin-bottom:16px}
+.score-bar-item{margin-bottom:12px}
+.score-bar-label{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+.score-bar-label .name{color:#94a3b8}
+.score-bar-label .val{font-weight:700}
+.score-bar-track{height:8px;background:#0f172a;border-radius:4px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:4px;transition:width 1s ease}
+
+/* Section */
+.audit-section{background:#1e293b;border-radius:16px;padding:28px;margin-bottom:20px}
+.audit-section h2{font-size:18px;color:#f1f5f9;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.audit-section .section-desc{font-size:13px;color:#64748b;margin-bottom:20px}
+
+/* Issue Cards */
+.issue-card{background:#0f172a;border-radius:12px;padding:16px 20px;margin-bottom:12px;border-left:4px solid;display:flex;gap:16px;align-items:flex-start}
+.issue-card.p0{border-color:#ef4444}
+.issue-card.p1{border-color:#f59e0b}
+.issue-card.p2{border-color:#3b82f6}
+.issue-card.p3{border-color:#64748b}
+.issue-badge{flex-shrink:0;width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800}
+.issue-badge.p0{background:rgba(239,68,68,.15);color:#f87171}
+.issue-badge.p1{background:rgba(245,158,11,.15);color:#fbbf24}
+.issue-badge.p2{background:rgba(59,130,246,.15);color:#60a5fa}
+.issue-badge.p3{background:rgba(100,116,139,.15);color:#94a3b8}
+.issue-content{flex:1;min-width:0}
+.issue-title{font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:4px}
+.issue-desc{font-size:13px;color:#94a3b8;line-height:1.6}
+.issue-location{font-size:11px;color:#475569;margin-top:6px;font-family:monospace;background:#1e293b;padding:2px 8px;border-radius:4px;display:inline-block}
+
+/* Summary Stats */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:#1e293b;border-radius:12px;padding:20px;text-align:center}
+.stat-num{font-size:32px;font-weight:800}
+.stat-label{font-size:12px;color:#64748b;margin-top:4px}
+
+/* Recommendation */
+.reco-box{background:linear-gradient(135deg,#1e293b,#334155);border-radius:16px;padding:28px;margin-bottom:20px;border:1px solid #475569}
+.reco-box h2{font-size:18px;color:#f1f5f9;margin-bottom:16px}
+.reco-steps{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.reco-step{background:#0f172a;border-radius:12px;padding:16px;border-left:3px solid #6366f1}
+.reco-step-num{font-size:11px;color:#6366f1;font-weight:700;margin-bottom:4px}
+.reco-step-title{font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:4px}
+.reco-step-desc{font-size:12px;color:#94a3b8;line-height:1.5}
+
+/* Chart */
+.chart-box{position:relative;height:280px;margin-top:16px}
+
+/* Table */
+.checklist-table{width:100%;border-collapse:collapse;font-size:13px}
+.checklist-table th{background:#0f172a;color:#94a3b8;padding:10px 12px;text-align:left;font-size:12px;font-weight:600}
+.checklist-table td{padding:10px 12px;border-bottom:1px solid #1e293b;color:#cbd5e1}
+.checklist-table .pass{color:#22c55e;font-weight:600}
+.checklist-table .fail{color:#ef4444;font-weight:600}
+.checklist-table .warn{color:#f59e0b;font-weight:600}
+
+.footer{text-align:center;padding:24px 0;color:#475569;font-size:12px}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="audit-header">
+    <h1>📋 项目上线审查报告</h1>
+    <div class="subtitle">基金组合管理仪表盘 v7.1 · 多账号 · 多目标 · AI投资顾问</div>
+    <div class="subtitle">审查日期：2026-06-23 · 代码行数：3313 · 文件大小：172KB</div>
+    <div class="verdict-badge verdict-no">⛔ 不可上线 — 原型/Demo 阶段</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" style="color:#ef4444">6</div>
+      <div class="stat-label">P0 阻断问题</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:#f59e0b">6</div>
+      <div class="stat-label">P1 高优先级</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:#3b82f6">5</div>
+      <div class="stat-label">P2 中优先级</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:#64748b">4</div>
+      <div class="stat-label">P3 建议改进</div>
+    </div>
+  </div>
+
+  <!-- Score -->
+  <div class="score-section">
+    <div class="score-gauge">
+      <div class="score-circle">
+        <div class="score-inner">
+          <div class="score-num">31</div>
+          <div class="score-label">/ 100</div>
+        </div>
+      </div>
+      <div class="score-stage">原型阶段</div>
+      <div style="font-size:12px;color:#64748b;margin-top:4px">距上线标准(80分)差 49 分</div>
+    </div>
+    <div class="score-breakdown">
+      <h3>📊 七维评分明细</h3>
+      <div class="score-bar-item">
+        <div class="score-bar-label"><span class="name">代码质量</span><span class="val" style="color:#ef4444">30</span></div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:30%;background:#ef4444"></div></div>
+      </div>
+      <div class="score-bar-item">
+        <div class="score-bar-label"><span class="name">安全性</span><span class="val" style="color:#ef4444">20</span></div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:20%;background:#ef4444"></div></div>
+      </div>
+      <div class="score-bar-item">
+        <div class="score-bar-label"><span class="name">功能完整性</span><span class="val" style="color:#f59e0b">40</span></div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:40%;background:#f59e0b"></div></div>
+      </div>
+      <div class="score-bar-item">
+        <div class="score-bar-label"><span class="name">用户体验</span><span class="val" style="color:#f59e0b">50</span></div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:50%;background:#f59e0b"></div></div>
+      </div>
+      <div class="score-bar-item">
+        <div class="score-bar-label"><span class="name">可维护性</span><span class="val" style="color:#ef4444">25</span></div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:25%;background:#ef4444"></div></div>
+      </div>
+      <div class="score-bar-item">
+        <div class="score-bar-label"><span class="name">合规性</span><span class="val" style="color:#ef4444">30</span></div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:30%;background:#ef4444"></div></div>
+      </div>
+      <div class="score-bar-item">
+        <div class="score-bar-label"><span class="name">上线就绪度</span><span class="val" style="color:#ef4444">20</span></div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:20%;background:#ef4444"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checklist -->
+  <div class="audit-section">
+    <h2>✅ 上线检查清单</h2>
+    <div class="section-desc">逐项对照标准上线检查项</div>
+    <div style="overflow-x:auto">
+      <table class="checklist-table">
+        <thead><tr>
+          <th>检查项</th><th>状态</th><th>说明</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>后端 API 服务</td><td class="fail">❌ 缺失</td><td>纯前端，无后端，所有数据硬编码</td></tr>
+          <tr><td>用户认证/授权</td><td class="fail">❌ 缺失</td><td>无登录系统，无多用户隔离</td></tr>
+          <tr><td>实时数据源</td><td class="fail">❌ 缺失</td><td>15支基金数据、净值、收益全部硬编码</td></tr>
+          <tr><td>数据库持久化</td><td class="fail">❌ 缺失</td><td>仅 localStorage，无服务端存储</td></tr>
+          <tr><td>XSS 防护</td><td class="fail">❌ 未做</td><td>多处 innerHTML 注入用户输入未转义</td></tr>
+          <tr><td>HTTPS 强制</td><td class="fail">❌ 缺失</td><td>无 HTTPS 重定向</td></tr>
+          <tr><td>错误监控</td><td class="fail">❌ 缺失</td><td>无 Sentry/日志收集</td></tr>
+          <tr><td>单元测试</td><td class="fail">❌ 缺失</td><td>0% 覆盖率</td></tr>
+          <tr><td>E2E 测试</td><td class="fail">❌ 缺失</td><td>无自动化测试</td></tr>
+          <tr><td>性能优化</td><td class="warn">⚠️ 部分</td><td>无代码分割、无懒加载、无压缩</td></tr>
+          <tr><td>CDN 冗余</td><td class="fail">❌ 单点</td><td>Chart.js 仅依赖 jsdelivr CDN</td></tr>
+          <tr><td>PWA/离线</td><td class="fail">❌ 缺失</td><td>无 Service Worker</td></tr>
+          <tr><td>移动端适配</td><td class="warn">⚠️ 基础</td><td>有媒体查询但表格溢出、交互不完善</td></tr>
+          <tr><td>可访问性(a11y)</td><td class="fail">❌ 缺失</td><td>无 ARIA、无键盘导航</td></tr>
+          <tr><td>金融合规</td><td class="fail">❌ 缺失</td><td>无资质、无合规审查、无风险测评</td></tr>
+          <tr><td>隐私合规</td><td class="warn">⚠️ 部分</td><td>有免责声明但无隐私政策、无数据加密</td></tr>
+          <tr><td>用户协议</td><td class="fail">❌ 缺失</td><td>无 Terms of Service</td></tr>
+          <tr><td>埋点/分析</td><td class="fail">❌ 缺失</td><td>无用户行为追踪</td></tr>
+          <tr><td>免责声明</td><td class="pass">✅ 有</td><td>底部和AI模块均有免责声明</td></tr>
+          <tr><td>QDII 净值说明</td><td class="pass">✅ 完善</td><td>T+1/T+2 披露机制说明详细</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- P0 Issues -->
+  <div class="audit-section">
+    <h2>🔴 P0 — 阻断问题（必须修复才能上线）</h2>
+    <div class="section-desc">这些问题会导致功能崩溃、安全漏洞或数据丢失</div>
+
+    <div class="issue-card p0">
+      <div class="issue-badge p0">P0</div>
+      <div class="issue-content">
+        <div class="issue-title">createScenarioChart 引用未定义变量 `goal`</div>
+        <div class="issue-desc">初始化时 createCharts() → createScenarioChart() 内引用 <code>goal.monthly</code>，但 <code>goal</code> 在该作用域未定义（应为 <code>goals[currentGoalId].monthly</code>）。导致 ReferenceError，情景模拟图无法渲染，后续图表初始化也可能连锁失败。</div>
+        <div class="issue-location">Line 2305: calcFV(totalAsset, goal.monthly, r, y)</div>
+      </div>
+    </div>
+
+    <div class="issue-card p0">
+      <div class="issue-badge p0">P0</div>
+      <div class="issue-content">
+        <div class="issue-title">XSS 漏洞 — 用户输入未转义直接注入 innerHTML</div>
+        <div class="issue-desc">多处使用 innerHTML + 模板字符串注入用户输入。目标名称、账号名称等字段未做 HTML 转义。恶意输入如 <code>&lt;img src=x onerror=alert(1)&gt;</code> 会执行任意 JS 代码。涉及函数：renderGoalTabs()、confirmAddAccount()、renderAIPredictions() 等。</div>
+        <div class="issue-location">Line 1777, 3034, 2838 等多处 innerHTML 赋值</div>
+      </div>
+    </div>
+
+    <div class="issue-card p0">
+      <div class="issue-badge p0">P0</div>
+      <div class="issue-content">
+        <div class="issue-title">无后端 API — 所有数据硬编码</div>
+        <div class="issue-desc">15支基金持仓、27支推荐池、15条AI预测、8笔交易记录全部硬编码在 JS 中。无实时净值获取、无交易接口、无数据存储。产品无法反映真实持仓变化，用户无法修改持仓数据。</div>
+        <div class="issue-location">Line 1785-1812 (funds), 2472-2570 (fundPool), 2790-2806 (aiPredictions)</div>
+      </div>
+    </div>
+
+    <div class="issue-card p0">
+      <div class="issue-badge p0">P0</div>
+      <div class="issue-content">
+        <div class="issue-title">无用户认证系统</div>
+        <div class="issue-desc">无登录注册、无 Session/Token、无多用户数据隔离。任何人打开同一浏览器即可查看/修改全部数据。涉及金融数据的产品必须有用户认证和权限控制。</div>
+        <div class="issue-location">全局 — 无 auth 模块</div>
+      </div>
+    </div>
+
+    <div class="issue-card p0">
+      <div class="issue-badge p0">P0</div>
+      <div class="issue-content">
+        <div class="issue-title">switchAccount 逻辑 Bug — 三元表达式两边相同</div>
+        <div class="issue-desc"><code>inputRetireAge.value = acct.age ? 60 : 60;</code> 三元表达式 true 和 false 分支都是 60，永远返回 60。应根据目标类型或账号配置动态计算目标达成年龄。</div>
+        <div class="issue-location">Line 2965</div>
+      </div>
+    </div>
+
+    <div class="issue-card p0">
+      <div class="issue-badge p0">P0</div>
+      <div class="issue-content">
+        <div class="issue-title">多账号系统不完整 — 新账号无独立基金数据</div>
+        <div class="issue-desc">新增账号后 totalAsset=0、fundCount=0，但所有图表/持仓/再平衡仍显示第一个账号的硬编码数据。switchAccount() 仅更新右侧卡片和目标输入，未切换基金数据源。多账号功能形同虚设。</div>
+        <div class="issue-location">Line 2935-2969 (switchAccount), 3012-3039 (confirmAddAccount)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- P1 Issues -->
+  <div class="audit-section">
+    <h2>🟡 P1 — 高优先级（上线前应修复）</h2>
+    <div class="section-desc">影响用户体验和数据完整性</div>
+
+    <div class="issue-card p1">
+      <div class="issue-badge p1">P1</div>
+      <div class="issue-content">
+        <div class="issue-title">截图上传功能未实现</div>
+        <div class="issue-desc">加减仓记录页的上传区域（Line 1108）仅 HTML 结构，无 JavaScript 事件绑定。点击/拖拽无任何反应。这是一个已展示给用户但无法使用的功能入口。</div>
+        <div class="issue-location">Line 1108-1111 (.upload-area 无 onclick/onchange)</div>
+      </div>
+    </div>
+
+    <div class="issue-card p1">
+      <div class="issue-badge p1">P1</div>
+      <div class="issue-content">
+        <div class="issue-title">KPI 卡片数据硬编码不更新</div>
+        <div class="issue-desc">总览页6个 KPI 卡片（总资产¥10,920、昨日收益+¥376.87、持有收益+¥736.90等）全部为静态 HTML 硬编码。切换账号或目标后不更新。AI 预测 KPI 虽有 JS 更新但初始值也是硬编码。</div>
+        <div class="issue-location">Line 714-744 (KPI cards)</div>
+      </div>
+    </div>
+
+    <div class="issue-card p1">
+      <div class="issue-badge p1">P1</div>
+      <div class="issue-content">
+        <div class="issue-title">CDN 单点故障 — Chart.js 依赖外部 CDN</div>
+        <div class="issue-desc">Chart.js 从 jsdelivr CDN 加载。CDN 宕机或网络受限（如国内访问不稳定）时，全部图表无法渲染，仪表盘核心功能瘫痪。应本地化部署或使用多 CDN 回退。</div>
+        <div class="issue-location">Line 7: &lt;script src="https://cdn.jsdelivr.net/npm/chart.js..."&gt;</div>
+      </div>
+    </div>
+
+    <div class="issue-card p1">
+      <div class="issue-badge p1">P1</div>
+      <div class="issue-content">
+        <div class="issue-title">alert() 做用户反馈 — 体验差</div>
+        <div class="issue-desc">多处使用 alert() 弹窗做用户反馈（addFundToWatch、showFundDetail、generateAIAdvice 等）。alert 阻塞 UI、无法自定义样式、移动端体验极差。应改用 Toast/Modal 组件。</div>
+        <div class="issue-location">Line 2712, 2720, 3051, 1745 等</div>
+      </div>
+    </div>
+
+    <div class="issue-card p1">
+      <div class="issue-badge p1">P1</div>
+      <div class="issue-content">
+        <div class="issue-title">无数据导出/备份机制</div>
+        <div class="issue-desc">用户的目标设定存储在 localStorage，但无法导出备份。清除浏览器数据后全部丢失。金融类产品必须有数据导出和备份功能。</div>
+        <div class="issue-location">localStorage key: fund_goals_v7 (Line 1700)</div>
+      </div>
+    </div>
+
+    <div class="issue-card p1">
+      <div class="issue-badge p1">P1</div>
+      <div class="issue-content">
+        <div class="issue-title">Chart 实例创建无错误处理</div>
+        <div class="issue-desc">createCharts() 中连续创建多个 Chart 实例，无 try-catch。任意一个图表创建失败（如 canvas 不存在）会导致后续代码不执行，连锁崩溃。</div>
+        <div class="issue-location">Line 2346-2433 (createCharts)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- P2 Issues -->
+  <div class="audit-section">
+    <h2>🔵 P2 — 中优先级（上线后迭代改进）</h2>
+
+    <div class="issue-card p2">
+      <div class="issue-badge p2">P2</div>
+      <div class="issue-content">
+        <div class="issue-title">无 PWA / 离线支持</div>
+        <div class="issue-desc">无 Service Worker、无 manifest.json。断网后完全不可用。作为金融工具类应用，离线查看持仓是基础需求。</div>
+      </div>
+    </div>
+
+    <div class="issue-card p2">
+      <div class="issue-badge p2">P2</div>
+      <div class="issue-content">
+        <div class="issue-title">无加载状态 / 骨架屏</div>
+        <div class="issue-desc">所有渲染同步执行。数据量大时（如基金推荐池27支卡片渲染）会出现短暂卡顿，无加载指示器。</div>
+      </div>
+    </div>
+
+    <div class="issue-card p2">
+      <div class="issue-badge p2">P2</div>
+      <div class="issue-content">
+        <div class="issue-title">无可访问性 (a11y)</div>
+        <div class="issue-desc">无 ARIA 标签、无键盘导航支持、无屏幕阅读器适配、图表无文字替代。不符合 WCAG 2.1 AA 标准。</div>
+      </div>
+    </div>
+
+    <div class="issue-card p2">
+      <div class="issue-badge p2">P2</div>
+      <div class="issue-content">
+        <div class="issue-title">移动端表格溢出</div>
+        <div class="issue-desc">持仓明细表（11列）、预估明细表（11列）在移动端横向溢出严重，虽有 table-wrap 滚动但操作体验差。</div>
+      </div>
+    </div>
+
+    <div class="issue-card p2">
+      <div class="issue-badge p2">P2</div>
+      <div class="issue-content">
+        <div class="issue-title">localStorage 无版本迁移策略</div>
+        <div class="issue-desc">key 为 fund_goals_v7，如果数据结构升级（如 v8），旧数据无法自动迁移。需要版本检测和数据迁移函数。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- P3 Issues -->
+  <div class="audit-section">
+    <h2>⚪ P3 — 建议改进（长期技术债）</h2>
+
+    <div class="issue-card p3">
+      <div class="issue-badge p3">P3</div>
+      <div class="issue-content">
+        <div class="issue-title">单文件架构 — 3313行全在一个 HTML</div>
+        <div class="issue-desc">CSS、HTML、JS 全在一个文件中。难以协作开发、无法做代码审查、无 Tree-shaking。应拆分为模块化项目（Vue/React + 组件化）。</div>
+      </div>
+    </div>
+
+    <div class="issue-card p3">
+      <div class="issue-badge p3">P3</div>
+      <div class="issue-content">
+        <div class="issue-title">无构建系统</div>
+        <div class="issue-desc">无 Webpack/Vite 打包、无代码压缩、无 CSS 提取。生产环境应使用构建工具优化。</div>
+      </div>
+    </div>
+
+    <div class="issue-card p3">
+      <div class="issue-badge p3">P3</div>
+      <div class="issue-content">
+        <div class="issue-title">无 TypeScript — 纯 JS 无类型检查</div>
+        <div class="issue-desc">funds、goals、accounts 等数据结构无类型定义。重构时极易引入类型相关 bug。</div>
+      </div>
+    </div>
+
+    <div class="issue-card p3">
+      <div class="issue-badge p3">P3</div>
+      <div class="issue-content">
+        <div class="issue-title">无测试覆盖</div>
+        <div class="issue-desc">calcFV、calcRequiredMonthly、calcYearsToGoal 等核心复利计算函数无单元测试。财务计算正确性无保障。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature Completeness -->
+  <div class="audit-section">
+    <h2>📊 功能完整性评估</h2>
+    <div class="section-desc">已实现功能 vs 上线所需功能</div>
+    <div class="chart-box"><canvas id="featureChart"></canvas></div>
+
+    <div style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div style="background:#0f172a;border-radius:12px;padding:20px">
+        <h3 style="font-size:14px;color:#22c55e;margin-bottom:12px">✅ 已实现（Demo级）</h3>
+        <ul style="font-size:13px;color:#94a3b8;line-height:2;padding-left:16px">
+          <li>10个功能模块（总览/持仓/再平衡/预估/目标/交易/计划/风格/推荐池/AI预测）</li>
+          <li>5种投资风格切换</li>
+          <li>9种目标类型 + localStorage持久化</li>
+          <li>AI自然语言意图识别</li>
+          <li>27支基金推荐池 + 6维评分</li>
+          <li>QDII净值披露时间轴</li>
+          <li>复利计算（calcFV/calcRequiredMonthly/calcYearsToGoal）</li>
+          <li>多账号UI框架（非功能）</li>
+        </ul>
+      </div>
+      <div style="background:#0f172a;border-radius:12px;padding:20px">
+        <h3 style="font-size:14px;color:#ef4444;margin-bottom:12px">❌ 上线缺失</h3>
+        <ul style="font-size:13px;color:#94a3b8;line-height:2;padding-left:16px">
+          <li>用户注册/登录/认证</li>
+          <li>后端 API + 数据库</li>
+          <li>实时基金净值/行情数据源</li>
+          <li>持仓数据 CRUD（增删改查）</li>
+          <li>截图OCR识别（UI有但未实现）</li>
+          <li>多账号数据隔离</li>
+          <li>数据导出/导入</li>
+          <li>推送通知（净值变动/再平衡提醒）</li>
+          <li>风险测评问卷</li>
+          <li>合规审查 + 金融牌照</li>
+          <li>错误监控 + 日志收集</li>
+          <li>用户协议 + 隐私政策</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Roadmap to Launch -->
+  <div class="reco-box">
+    <h2>🚀 上线路线图 — 从 Demo 到产品</h2>
+    <div class="reco-steps">
+      <div class="reco-step">
+        <div class="reco-step-num">阶段 1 · 2-4周</div>
+        <div class="reco-step-title">修复 P0 + 搭建后端</div>
+        <div class="reco-step-desc">修复 goal 变量 bug、XSS 漏洞；搭建 Node.js/Python 后端 + PostgreSQL/MongoDB；实现用户认证（JWT）；设计基金数据 API</div>
+      </div>
+      <div class="reco-step">
+        <div class="reco-step-num">阶段 2 · 3-5周</div>
+        <div class="reco-step-title">接入实时数据源</div>
+        <div class="reco-step-desc">对接天天基金/东方财富 API 获取实时净值；实现持仓 CRUD；实现截图 OCR 识别；多账号数据隔离</div>
+      </div>
+      <div class="reco-step">
+        <div class="reco-step-num">阶段 3 · 2-3周</div>
+        <div class="reco-step-title">前端工程化重构</div>
+        <div class="reco-step-desc">拆分为 Vue3/React 组件项目；引入 TypeScript；Chart.js 本地化；PWA + Service Worker；移动端深度适配</div>
+      </div>
+      <div class="reco-step">
+        <div class="reco-step-num">阶段 4 · 2-3周</div>
+        <div class="reco-step-title">合规 + 安全加固</div>
+        <div class="reco-step-desc">金融合规审查；风险测评问卷；用户协议+隐私政策；数据加密；HTTPS；错误监控（Sentry）；安全渗透测试</div>
+      </div>
+      <div class="reco-step">
+        <div class="reco-step-num">阶段 5 · 1-2周</div>
+        <div class="reco-step-title">测试 + 上线</div>
+        <div class="reco-step-desc">单元测试(核心计算函数)；E2E测试(关键流程)；性能优化；CDN部署；灰度发布；监控告警配置</div>
+      </div>
+      <div class="reco-step">
+        <div class="reco-step-num">阶段 6 · 持续</div>
+        <div class="reco-step-title">APP 化（可选）</div>
+        <div class="reco-step-desc">PWA → 原生 APP（React Native / Flutter）；应用商店上架；推送通知；生物识别登录</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Verdict -->
+  <div class="audit-section" style="border:2px solid #ef4444">
+    <h2 style="color:#f87171">📋 最终审查结论</h2>
+    <div style="font-size:14px;color:#cbd5e1;line-height:1.8;margin-top:12px">
+      <p style="margin-bottom:12px"><strong style="color:#f87171">结论：当前版本不可上线。</strong></p>
+      <p style="margin-bottom:12px">项目作为<strong>个人 Demo / 原型</strong>质量不错 — 10 个功能模块覆盖了基金组合管理的核心链路，UI 设计专业，QDII 净值披露机制说明详实，AI 预测和推荐池模型有理论支撑。但从<strong>产品上线标准</strong>来看，存在 <strong>6 个 P0 阻断问题</strong>（代码 bug、安全漏洞、无后端、无认证），以及大量功能缺失。</p>
+      <p style="margin-bottom:12px"><strong>核心差距：</strong></p>
+      <ul style="padding-left:20px;margin-bottom:12px;line-height:2">
+        <li>数据层：100% 硬编码，无 API、无数据库、无实时数据</li>
+        <li>安全层：XSS 漏洞、无认证、无加密、无 HTTPS</li>
+        <li>功能层：截图上传未实现、多账号不完整、KPI 不更新</li>
+        <li>合规层：无金融资质、无风险测评、无用户协议</li>
+        <li>工程层：单文件 3313 行、无测试、无构建系统</li>
+      </ul>
+      <p><strong style="color:#fbbf24">APP 化建议：</strong>当前 HTML 单页面可通过 PWA 技术快速封装为"准 APP"（可安装到手机桌面），但要成为真正的金融类 APP（应用商店上架），需要完成后端、认证、合规三大基础建设。建议按上方路线图分 5 个阶段推进，预计总工期 <strong>10-17 周</strong>。</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    审查报告生成时间：2026-06-23 17:00 · 审查人：产品通（AI产品管理专家）<br>
+    本报告基于代码静态分析，未包含动态运行时测试
+  </div>
+</div>
+
+<script>
+// Feature completeness chart
+new Chart(document.getElementById('featureChart'),{
+  type:'radar',
+  data:{
+    labels:['数据层','安全层','功能层','UI/UX','可维护性','合规性','性能','移动端'],
+    datasets:[
+      {label:'当前水平',data:[15,20,40,65,25,30,35,45],borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.15)',borderWidth:2,pointRadius:4},
+      {label:'上线标准',data:[80,85,75,75,70,75,70,70],borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.1)',borderWidth:2,borderDash:[5,5],pointRadius:4}
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{color:'#94a3b8',font:{size:12}}}},
+    scales:{
+      r:{
+        beginAtZero:true,max:100,
+        ticks:{color:'#475569',backdropColor:'transparent',font:{size:10}},
+        grid:{color:'#1e293b'},
+        angleLines:{color:'#1e293b'},
+        pointLabels:{color:'#94a3b8',font:{size:12}}
+      }
+    }
+  }
+});
+</script>
+</body>
+</html>
