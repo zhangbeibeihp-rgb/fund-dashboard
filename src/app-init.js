@@ -253,10 +253,11 @@ async function reinitDashboard() {
   // 3. 重新创建图表
   createCharts();
 
-  // 4. 切换到第一个账号
-  switchAccount(0);
+  // 4. 切换首个账号（仅更新 UI，不覆写全局 funds/trades）
+  switchToFirstAccountUI();
 
   // 5. 重建账号 Tab 栏
+  rebuildAccountTabs();
   rebuildAccountTabs();
 
   // 6. 更新 KPI
@@ -278,6 +279,51 @@ function rebuildAccountTabs() {
   // 保留添加按钮
   const addBtn = '<button class="acct-add-btn" onclick="showAddAccount()" title="添加账号" aria-label="添加账号">＋</button>';
   tabContainer.innerHTML = tabs + addBtn;
+}
+
+// ===== 仅刷新账号卡片 UI，不覆写全局 funds/trades/totalAsset =====
+function switchToFirstAccountUI() {
+  currentAccountId = 0;
+  const acct = accounts[0];
+  if (!acct) return;
+
+  document.querySelectorAll('.acct-tab').forEach(t => {
+    t.classList.toggle('active', parseInt(t.dataset.acct) === 0);
+  });
+
+  const nameEl = document.getElementById('currentAcctName');
+  const totalEl = document.getElementById('currentAcctTotal');
+  const profitEl = document.getElementById('camProfit');
+  const fundsEl = document.getElementById('camFunds');
+  const updateEl = document.getElementById('camUpdate');
+
+  if (nameEl) nameEl.textContent = acct.name;
+  if (totalEl) totalEl.textContent = '¥' + acct.totalAsset.toLocaleString('zh-CN', { minimumFractionDigits: 2 });
+  if (profitEl) {
+    const sign = acct.holdProfit >= 0 ? '+' : '';
+    profitEl.innerHTML = `<span class="${acct.holdProfit >= 0 ? 'green' : ''}">${sign}¥${Math.abs(acct.holdProfit).toFixed(2)} (${sign}${acct.holdRate.toFixed(2)}%)</span>`;
+  }
+  if (fundsEl) fundsEl.textContent = acct.fundCount + '支基金';
+  if (updateEl) updateEl.textContent = '更新于 ' + acct.lastUpdate;
+
+  // 更新目标输入框（如果存在）
+  const inputTarget = document.getElementById('inputTarget');
+  const inputRate = document.getElementById('inputRate');
+  const inputMonthly = document.getElementById('inputMonthly');
+  const inputRetireAge = document.getElementById('inputRetireAge');
+  if (inputTarget && goals[currentGoalId]) {
+    const tgt = acct.targetAmount ? acct.targetAmount / 10000 : goals[currentGoalId].target;
+    goals[currentGoalId].target = tgt;
+    inputTarget.value = tgt;
+  }
+  if (inputRate) {
+    const rateMap = { '保守型': 4, '稳健型': 6, '平衡型': 7.5, '进取型': 9, '激进型': 11 };
+    const r = rateMap[acct.riskLevel] || 6;
+    inputRate.value = r;
+    if (goals[currentGoalId]) goals[currentGoalId].rate = r / 100;
+  }
+  if (inputMonthly) { inputMonthly.value = acct.monthlyInvest; if (goals[currentGoalId]) goals[currentGoalId].monthly = acct.monthlyInvest; }
+  if (inputRetireAge) { const ra = 60; inputRetireAge.value = ra; if (goals[currentGoalId]) goals[currentGoalId].endAge = ra; }
 }
 
 // ===== 设置保存钩子 =====
@@ -376,7 +422,8 @@ async function reloadFromCloud() {
       updateGoal();
     }
     if (activeAcctId < accounts.length) {
-      switchAccount(activeAcctId);
+      // 仅更新 UI，不覆写全局 funds/trades（reinitDashboard 已处理渲染）
+      switchToFirstAccountUI();
     }
 
     showToast('数据已同步', 'success');

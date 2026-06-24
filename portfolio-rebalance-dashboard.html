@@ -2830,15 +2830,15 @@ function fetchQDIIPreMarket(){
 
     // Step 3: Calculate QDII estimate
     document.getElementById('pmLoadText').textContent = '🧮 步骤 3/3：正在计算QDII盘前估值...';
-    calculateQDIIEstimate();
+    const hasData = calculateQDIIEstimate();
 
     // Hide loading
     document.getElementById('pmLoading').style.display = 'none';
     document.getElementById('pmFetchBtn').disabled = false;
     document.getElementById('pmFetchBtn').textContent = '🌅 计算当日QDII盘前估值';
 
-    // Render
-    renderQDIIResults();
+    // Render (only if calculation produced results)
+    if (hasData !== false) renderQDIIResults();
   }
   go().catch(err => {
     document.getElementById('pmLoading').style.display = 'none';
@@ -2856,6 +2856,11 @@ async function fetchPreMarketEstimates(){ await fetchQDIIPreMarket(); }
 function calculateQDIIEstimate(){
   pmQdiiEstimate = [];
   let totalEstProfit = 0;
+
+  if (!funds || funds.length === 0) {
+    showToast('⚠️ 没有基金持仓数据，无法计算QDII盘前估值', 'error');
+    return false;
+  }
 
   funds.forEach(f => {
     let indexChangePct = 0;
