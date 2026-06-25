@@ -2103,7 +2103,10 @@ async function clearAllUserData(){
 function rebuildAccountTabsForLocal(){
   var tabsEl = document.getElementById('accountTabs');
   if(!tabsEl) return;
-  tabsEl.innerHTML = '<button class="acct-tab active" data-acct="0" onclick="switchAccount(0)"><span class="acct-icon">🏦</span> 本地账号<span class="acct-badge">0支</span></button>';
+  tabsEl.innerHTML = accounts.map(function(a){
+    var name = (a.investorName && a.investorName !== '' ? a.investorName + ' · ' : '') + a.name;
+    return '<button class="acct-tab' + (a.id === currentAccountId ? ' active' : '') + '" data-acct="' + a.id + '" onclick="switchAccount(' + a.id + ')"><span class="acct-icon">' + (a.icon || '🏦') + '</span> ' + escapeHtml(name) + '<span class="acct-badge">' + (a.fundCount || 0) + '支</span></button>';
+  }).join('');
 }
 
 // ===== P2-5: localStorage 版本迁移 =====
@@ -2415,6 +2418,7 @@ function saveFundsData(){
     }
     // 也尝试保存到 Supabase（如果已登录）
     if(typeof syncFundsToCloud === 'function') syncFundsToCloud();
+    saveAccountsData();  // P3: 同步账号摘要到 localStorage
   } catch(e){ console.warn('[Funds] localStorage 保存失败'); }
 }
 let totalAsset = 10920.20;
@@ -4598,6 +4602,40 @@ let accounts = [
 ];
 let currentAccountId = 0;
 
+// P3: accounts 持久化
+var STORAGE_ACCOUNTS_KEY = 'fund_accounts';
+function loadAccountsData(){
+  try {
+    var saved = localStorage.getItem(STORAGE_ACCOUNTS_KEY);
+    if(saved){
+      var parsed = JSON.parse(saved);
+      if(Array.isArray(parsed) && parsed.length > 0){
+        accounts = parsed.map(function(a){
+          // fundsData/tradesData 由独立持久化加载，此处不恢复
+          a.fundsData = [];
+          a.tradesData = [];
+          if(!a.icon) a.icon = '🏦';
+          return a;
+        });
+        return true;
+      }
+    }
+  } catch(e){ console.warn('[Accounts] localStorage 加载失败'); }
+  return false;
+}
+function saveAccountsData(){
+  try {
+    var slim = accounts.map(function(a){
+      var copy = {};
+      Object.keys(a).forEach(function(k){
+        if(k !== 'fundsData' && k !== 'tradesData') copy[k] = a[k];
+      });
+      return copy;
+    });
+    localStorage.setItem(STORAGE_ACCOUNTS_KEY, JSON.stringify(slim));
+  } catch(e){ console.warn('[Accounts] localStorage 保存失败'); }
+}
+
 function switchAccount(id){
   currentAccountId = id;
   const acct = accounts[id];
@@ -4721,15 +4759,10 @@ function confirmAddAccount(){
     fundsData: [], tradesData: []
   };
   accounts.push(newAcct);
+  saveAccountsData();  // P3: 持久化账号列表
 
-  // Add tab button
-  const tabsEl = document.getElementById('accountTabs');
-  const btn = document.createElement('button');
-  btn.className = 'acct-tab';
-  btn.dataset.acct = newId;
-  btn.onclick = ()=>switchAccount(newId);
-  btn.innerHTML = `<span class="acct-icon">${newAcct.icon}</span>${escapeHtml(name)}<span class="acct-badge">0支</span>`;
-  tabsEl.appendChild(btn);
+  // Rebuild tab buttons
+  rebuildAccountTabsForLocal();
 
   closeAddAccount();
   switchAccount(newId);
@@ -4995,6 +5028,8 @@ function confirmAddGoal(){
 
 // ===== 初始化 =====
 loadGoals();              // 从 localStorage 加载目标
+loadAccountsData();       // P3: 从 localStorage 恢复账号列表
+rebuildAccountTabsForLocal(); // P3: 重建账号切换标签
 loadFundsData();          // P0: 从 localStorage 加载持仓数据
 createCharts();
 renderHoldings();
@@ -5010,6 +5045,7 @@ renderFundPool();
 renderAIPredictions();
 switchAccount(0);
 saveFundsData();          // P0: 初始化后保存当前数据状态
+saveAccountsData();       // P3: 初始化后同步账号数据
 
 // ===== PWA Service Worker 注册（外部文件版）=====
 (function registerSW() {
@@ -5533,6 +5569,7 @@ function importData(event){
             accounts.push(a);
           }
         });
+        saveAccountsData();  // P3: Supabase 同步后保存
       }
       if(data.currentStyle) { currentStyle = data.currentStyle; }
       currentGoalId = 0;
