@@ -355,6 +355,8 @@ td.red{color:#dc2626;font-weight:600}
 td.green{color:var(--clr-success);font-weight:600}
 td.orange{color:#d97706;font-weight:600}
 td.gray{color:var(--clr-gray-400)}
+td[role="button"]{cursor:pointer;transition:background var(--ease-fast)}
+td[role="button"]:hover{background:var(--clr-primary-50)}
 .table-wrap{max-height:420px;overflow:auto;border-radius:var(--radius-md);-webkit-overflow-scrolling:touch}
 
 /* ===== 标签 ===== */
@@ -901,27 +903,27 @@ li{margin-bottom:2px}
     <div class="kpi-row">
       <div class="kpi-card" onclick="showSection('overview')">
         <div class="kpi-label">总资产</div>
-        <div class="kpi-value" id="kpiTotal">¥10,920</div>
-        <div class="kpi-sub green" id="kpiTotalSub">较初始 +¥420</div>
-        <span class="kpi-status confirmed" id="kpiStatusTotal">已确认 ✓</span>
+        <div class="kpi-value" id="kpiTotal">¥0</div>
+        <div class="kpi-sub" id="kpiTotalSub">等待导入</div>
+        <span class="kpi-status" id="kpiStatusTotal">待导入</span>
       </div>
       <div class="kpi-card" onclick="showSection('estimate')">
         <div class="kpi-label">昨日收益</div>
-        <div class="kpi-value red" id="kpiYesterday">+¥376.87</div>
-        <div class="kpi-sub red" id="kpiYesterdayPct">+3.45%</div>
-        <span class="kpi-status confirmed" id="kpiStatusYesterday">已确认 ✓</span>
+        <div class="kpi-value" id="kpiYesterday">¥0.00</div>
+        <div class="kpi-sub" id="kpiYesterdayPct">等待导入</div>
+        <span class="kpi-status" id="kpiStatusYesterday">待导入</span>
       </div>
       <div class="kpi-card" onclick="showSection('holdings')">
         <div class="kpi-label">持有收益</div>
-        <div class="kpi-value green" id="kpiHoldProfit">+¥736.90</div>
-        <div class="kpi-sub green" id="kpiHoldRate">+7.23%</div>
-        <span class="kpi-status confirmed" id="kpiStatusHold">已确认 ✓</span>
+        <div class="kpi-value" id="kpiHoldProfit">¥0.00</div>
+        <div class="kpi-sub" id="kpiHoldRate">等待导入</div>
+        <span class="kpi-status" id="kpiStatusHold">待导入</span>
       </div>
       <div class="kpi-card" onclick="showSection('trades')">
         <div class="kpi-label">累计收益</div>
-        <div class="kpi-value orange" id="kpiTotalProfit">+¥1,614.34</div>
+        <div class="kpi-value orange" id="kpiTotalProfit">¥0.00</div>
         <div class="kpi-sub">含已实现收益</div>
-        <span class="kpi-status confirmed" id="kpiStatusTotal">已确认 ✓</span>
+        <span class="kpi-status" id="kpiStatusTotalProfit">待导入</span>
       </div>
       <div class="kpi-card" onclick="showSection('estimate')" id="kpiEstimateCard" style="border-top-color:#d946ef">
         <div class="kpi-label" id="kpiEstLabel">💫 今晚QDII预估</div>
@@ -940,19 +942,9 @@ li{margin-bottom:2px}
     <div class="section-title">🏆 昨日收益 Top 3</div>
     <div class="top3" id="top3List">
       <div class="top3-item">
-        <div class="top3-name">华夏移动互联混合(QDII)</div>
-        <div class="top3-val">+¥131.40</div>
-        <div class="top3-sub">持仓 ¥3,210 ｜ 收益率 +9.24%</div>
-      </div>
-      <div class="top3-item">
-        <div class="top3-name">华夏全球科技先锋混合(QDII)A</div>
-        <div class="top3-val">+¥128.46</div>
-        <div class="top3-sub">持仓 ¥4,033 ｜ 收益率 +11.11%</div>
-      </div>
-      <div class="top3-item">
-        <div class="top3-name">广发全球精选股票(QDII)A</div>
-        <div class="top3-val">+¥72.14</div>
-        <div class="top3-sub">持仓 ¥1,962 ｜ 收益率 +7.89%</div>
+        <div class="top3-name">暂无持仓数据</div>
+        <div class="top3-val">¥0.00</div>
+        <div class="top3-sub">请导入或同步数据</div>
       </div>
     </div>
 
@@ -988,7 +980,7 @@ li{margin-bottom:2px}
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>基金名称</th><th>基金类型</th><th>份额</th><th>当前金额</th><th>占比</th><th>昨日收益</th><th>持仓收益</th><th>收益率</th>
+            <th>基金名称</th><th>基金类型</th><th>份额</th><th style="cursor:pointer" title="点击可编辑净值">净值 ▼</th><th>当前金额</th><th>占比</th><th>昨日收益</th><th>持仓收益</th><th>收益率</th>
           </tr></thead>
           <tbody id="holdingsBody"></tbody>
         </table>
@@ -2335,34 +2327,69 @@ function renderGoalTabs(){
 
 // ===== 基金数据 =====
 const defaultFunds = [
-  {name:'华夏全球科技先锋混合(QDII)A',code:'005698',type:'mixed',market:'us',amount:4033.41,yesterday:128.46,hold:293.41,rate:11.11,share:2189.74,nav:1.8421,ref:'纳斯达克100',estChange:2.1,navDate:'2026-06-22(美东周一)',navLag:'T+1',navStatus:'已披露'},
-  {name:'华夏移动互联混合(QDII)',code:'002891',type:'mixed',market:'us',amount:3209.67,yesterday:131.40,hold:254.67,rate:9.24,share:1523.12,nav:2.1053,ref:'纳斯达克100',estChange:2.3,navDate:'2026-06-22(美东周一)',navLag:'T+1',navStatus:'已披露'},
-  {name:'建信新兴市场混合(QDII)A',code:'539002',type:'mixed',market:'us',amount:269.13,yesterday:10.08,hold:19.13,rate:10.07,share:128.44,nav:2.0955,ref:'MSCI新兴市场',estChange:1.5,navDate:'2026-06-22(美东周一)',navLag:'T+1',navStatus:'已披露'},
-  {name:'国富全球科技互联混合(QDII)C',code:'021842',type:'mixed',market:'us',amount:520.53,yesterday:16.83,hold:20.53,rate:5.13,share:245.31,nav:2.1222,ref:'纳斯达克100',estChange:2.0,navDate:'2026-06-22(美东周一)',navLag:'T+1',navStatus:'已披露'},
-  {name:'易方达全球成长精选混合(QDII)A',code:'012920',type:'mixed',market:'us',amount:85.03,yesterday:2.29,hold:5.03,rate:12.58,share:42.15,nav:2.0174,ref:'纳斯达克100',estChange:2.2,navDate:'2026-06-22(美东周一)',navLag:'T+1',navStatus:'已披露'},
-  {name:'易方达全球成长精选混合(QDII)C',code:'012922',type:'mixed',market:'us',amount:61.57,yesterday:1.09,hold:1.57,rate:3.92,share:30.52,nav:2.0180,ref:'纳斯达克100',estChange:2.2,navDate:'2026-06-22(美东周一)',navLag:'T+1',navStatus:'已披露'},
-  {name:'永赢半导体产业智选混合发起C',code:'015968',type:'mixed',market:'cn',amount:6.83,yesterday:0.22,hold:1.83,rate:36.60,share:5.21,nav:1.3113,ref:'中华半导体芯片',estChange:0.8,navDate:'2026-06-23(A股周二)',navLag:'T+0',navStatus:'已披露'},
-  {name:'广发远见智选混合C',code:'016874',type:'mixed',market:'cn',amount:7.29,yesterday:0.40,hold:2.29,rate:45.80,share:5.52,nav:1.3207,ref:'沪深300',estChange:0.4,navDate:'2026-06-23(A股周二)',navLag:'T+0',navStatus:'已披露'},
-  {name:'银华集成电路混合C',code:'013841',type:'mixed',market:'cn',amount:20.00,yesterday:0,hold:0,rate:0,share:15.32,nav:1.3056,ref:'中华半导体芯片',estChange:0.5,navDate:'2026-06-23(A股周二)',navLag:'T+0',navStatus:'待确认'},
-  {name:'招商纳斯达克100ETF发起式联接',code:'019547',type:'index',market:'us',amount:50.35,yesterday:0.46,hold:0.35,rate:1.17,share:10.21,nav:4.9310,ref:'纳斯达克100',estChange:1.9,navDate:'2026-06-22(美东周一)',navLag:'T+1',navStatus:'已披露'},
-  {name:'广发纳指100ETF联接(QDII)A',code:'270042',type:'index',market:'us',amount:132.94,yesterday:2.57,hold:2.94,rate:2.67,share:26.91,nav:4.9415,ref:'纳斯达克100',estChange:1.9,navDate:'2026-06-22(美东周一)',navLag:'T+1',navStatus:'已披露'},
-  {name:'南方纳斯达克100指数发起(QDII)A',code:'016452',type:'index',market:'us',amount:504.24,yesterday:9.70,hold:4.24,rate:1.06,share:102.15,nav:4.9360,ref:'纳斯达克100',estChange:1.9,navDate:'2026-06-22(美东周一)',navLag:'T+1',navStatus:'已披露'},
-  {name:'华夏国证半导体芯片ETF联接C',code:'008888',type:'index',market:'cn',amount:6.51,yesterday:0.22,hold:1.51,rate:30.20,share:5.01,nav:1.2994,ref:'中华半导体芯片',estChange:0.6,navDate:'2026-06-23(A股周二)',navLag:'T+0',navStatus:'已披露'},
-  {name:'广发全球精选股票(QDII)A',code:'270023',type:'stock',market:'us',amount:1962.22,yesterday:72.14,hold:128.92,rate:7.89,share:610.01,nav:3.2156,ref:'标普500',estChange:1.8,navDate:'2026-06-22(美东周一)',navLag:'T+1',navStatus:'已披露'},
-  {name:'嘉实美国成长股票(QDII)人民币',code:'000043',type:'stock',market:'us',amount:50.48,yesterday:1.01,hold:0.48,rate:0.96,share:12.83,nav:3.9350,ref:'罗素1000成长',estChange:1.7,navDate:'2026-06-22(美东周一)',navLag:'T+2',navStatus:'预估待披露'}
+  {name:'国富全球科技互联混合(QDII)人民币C',code:'021842',type:'mixed',market:'us',amount:602.64,yesterday:-30.97,hold:2.64,rate:0.53,share:283.97,nav:2.1222,ref:'纳斯达克100',estChange:0,navDate:'2026-06-25(美东周三)',navLag:'T+1',navStatus:'已披露'},
+  {name:'建信新兴市场混合(QDII)A',code:'539002',type:'mixed',market:'us',amount:312.22,yesterday:-21.34,hold:2.22,rate:0.89,share:149.00,nav:2.0955,ref:'MSCI新兴市场',estChange:0,navDate:'2026-06-25(美东周三)',navLag:'T+1',navStatus:'已披露'},
+  {name:'银华集成电路混合C',code:'013841',type:'mixed',market:'cn',amount:521.60,yesterday:1.63,hold:1.60,rate:8.00,share:399.51,nav:1.3056,ref:'中华半导体芯片',estChange:0,navDate:'2026-06-25(A股周四)',navLag:'T+0',navStatus:'已披露'},
+  {name:'广发纳指100ETF联接(QDII)A',code:'270042',type:'index',market:'us',amount:138.75,yesterday:-4.02,hold:-1.25,rate:-0.96,share:28.08,nav:4.9415,ref:'纳斯达克100',estChange:0,navDate:'2026-06-25(美东周三)',navLag:'T+1',navStatus:'已披露'},
+  {name:'广发全球精选股票(QDII)A',code:'270023',type:'stock',market:'us',amount:2004.93,yesterday:-116.23,hold:71.63,rate:3.91,share:623.50,nav:3.2156,ref:'标普500',estChange:0,navDate:'2026-06-25(美东周三)',navLag:'T+1',navStatus:'已披露'},
+  {name:'华夏全球科技先锋混合(QDII)A',code:'005698',type:'mixed',market:'us',amount:4826.20,yesterday:-298.11,hold:86.20,rate:2.30,share:2619.14,nav:1.8421,ref:'纳斯达克100',estChange:0,navDate:'2026-06-25(美东周三)',navLag:'T+1',navStatus:'已披露'},
+  {name:'招商纳斯达克100ETF发起式联接',code:'019547',type:'index',market:'us',amount:59.09,yesterday:-1.20,hold:-0.91,rate:-1.82,share:11.98,nav:4.9310,ref:'纳斯达克100',estChange:0,navDate:'2026-06-25(美东周三)',navLag:'T+1',navStatus:'已披露'},
+  {name:'易方达全球优质企业混合(QDII)A',code:'019610',type:'mixed',market:'us',amount:1000.00,yesterday:0,hold:0,rate:0,share:1000.00,nav:1.0000,ref:'标普500',estChange:0,navDate:'2026-06-27(预计更新)',navLag:'T+2',navStatus:'待更新'},
+  {name:'南方纳斯达克100指数发起(QDII)A',code:'016452',type:'index',market:'us',amount:538.99,yesterday:-14.55,hold:-11.01,rate:-2.20,share:109.20,nav:4.9360,ref:'纳斯达克100',estChange:0,navDate:'2026-06-25(美东周三)',navLag:'T+1',navStatus:'已披露'},
+  {name:'华夏移动互联混合(QDII)',code:'002891',type:'mixed',market:'us',amount:3151.58,yesterday:-281.40,hold:96.58,rate:3.27,share:1496.98,nav:2.1053,ref:'纳斯达克100',estChange:0,navDate:'2026-06-25(美东周三)',navLag:'T+1',navStatus:'已披露'},
+  {name:'易方达全球成长精选混合(QDII)A',code:'012920',type:'mixed',market:'us',amount:81.29,yesterday:-5.22,hold:1.29,rate:1.61,share:40.28,nav:2.0174,ref:'纳斯达克100',estChange:0,navDate:'2026-06-25(美东周三)',navLag:'T+1',navStatus:'已披露'},
+  {name:'易方达全球成长精选混合(QDII)C',code:'012922',type:'mixed',market:'us',amount:58.05,yesterday:-4.92,hold:-1.95,rate:-3.25,share:28.77,nav:2.0180,ref:'纳斯达克100',estChange:0,navDate:'2026-06-25(美东周三)',navLag:'T+1',navStatus:'已披露'},
+  {name:'嘉实美国成长股票(QDII)-人民币',code:'000043',type:'stock',market:'us',amount:48.77,yesterday:-1.57,hold:-1.23,rate:-2.46,share:12.39,nav:3.9350,ref:'罗素1000成长',estChange:0,navDate:'2026-06-25(美东周三)',navLag:'T+2',navStatus:'已披露'},
+  {name:'永赢半导体产业智选混合发起C',code:'015968',type:'mixed',market:'cn',amount:7.15,yesterday:0.40,hold:2.15,rate:43.00,share:5.45,nav:1.3113,ref:'中华半导体芯片',estChange:0,navDate:'2026-06-25(A股周四)',navLag:'T+0',navStatus:'已披露'},
+  {name:'华夏国证半导体芯片ETF联接C',code:'008888',type:'index',market:'cn',amount:6.70,yesterday:0.32,hold:1.70,rate:34.00,share:5.16,nav:1.2994,ref:'中华半导体芯片',estChange:0,navDate:'2026-06-25(A股周四)',navLag:'T+0',navStatus:'已披露'},
+  {name:'广发远见智选混合C',code:'016874',type:'mixed',market:'cn',amount:7.38,yesterday:0.32,hold:2.38,rate:47.60,share:5.59,nav:1.3207,ref:'沪深300',estChange:0,navDate:'2026-06-25(A股周四)',navLag:'T+0',navStatus:'已披露'}
 ];
 let funds = defaultFunds;
 
 // P0: 持仓数据持久化
 var STORAGE_FUNDS_KEY = 'fund_holdings';
+function sanitizeFundRecord(f){
+  if(!f || typeof f !== 'object') return null;
+  var next = Object.assign({}, f);
+  next.name = String(next.name || '').trim();
+  next.code = String(next.code || '').trim();
+  next.type = next.type || inferFundTypeFromName(next.name);
+  next.market = next.market || inferMarketFromName(next.name);
+  next.ref = next.ref || inferRefFromName(next.name);
+  next.amount = Math.max(0, toNumber(next.amount));
+  next.share = Math.max(0, toNumber(next.share));
+  next.cost = toNumber(next.cost);
+  next.nav = toNumber(next.nav);
+  next.estChange = toNumber(next.estChange);
+  next.yesterday = toNumber(next.yesterday);
+  next.hold = toNumber(next.hold);
+  next.rate = toNumber(next.rate);
+  delete next.liveYesterday;
+  delete next.liveAmount;
+  delete next.liveRate;
+  delete next.liveSource;
+  delete next.liveTime;
+  return next;
+}
+function sanitizeFundsCollection(list){
+  var sanitized = Array.isArray(list) ? list.map(sanitizeFundRecord).filter(Boolean) : [];
+  return sanitized.filter(function(f){ return f.name && f.amount > 0; });
+}
 function loadFundsData(){
   try {
     var saved = localStorage.getItem(STORAGE_FUNDS_KEY);
     if(saved){
       var parsed = JSON.parse(saved);
-      if(Array.isArray(parsed) && parsed.length > 0){
-        funds = parsed;
+      var cleaned = sanitizeFundsCollection(parsed);
+      if(cleaned.length > 0){
+        funds = cleaned;
+        if(JSON.stringify(parsed) !== JSON.stringify(cleaned)){
+          localStorage.setItem(STORAGE_FUNDS_KEY, JSON.stringify(cleaned));
+        }
         return true;
+      }
+      if(Array.isArray(parsed) && parsed.length > 0){
+        localStorage.removeItem(STORAGE_FUNDS_KEY);
       }
     }
   } catch(e){ console.warn('[Funds] localStorage 加载失败，使用默认数据'); }
@@ -2370,15 +2397,19 @@ function loadFundsData(){
 }
 function saveFundsData(){
   try {
-    localStorage.setItem(STORAGE_FUNDS_KEY, JSON.stringify(funds));
+    funds = sanitizeFundsCollection(funds);
+    localStorage.setItem(STORAGE_FUNDS_KEY, JSON.stringify(sanitizeFundsCollection(funds)));
+    var principalBase = getPortfolioPrincipalBase();
+    var displayedTotal = funds.reduce(function(s,f){ return s + getFundDisplayAmount(f); }, 0);
+    var displayedHoldProfit = displayedTotal - principalBase;
     // 自动同步到当前账号的 fundsData 和摘要数据
     if(accounts[currentAccountId]){
-      accounts[currentAccountId].fundsData = funds;
+      accounts[currentAccountId].fundsData = sanitizeFundsCollection(funds);
       // 更新账号摘要信息，确保侧边栏卡片显示正确
-      accounts[currentAccountId].totalAsset = totalAsset;
-      accounts[currentAccountId].holdProfit = funds.reduce(function(s,f){ return s + (f.hold || 0); }, 0);
-      accounts[currentAccountId].holdRate = accounts[currentAccountId].totalAsset > 0
-        ? (accounts[currentAccountId].holdProfit / (accounts[currentAccountId].totalAsset - accounts[currentAccountId].holdProfit) * 100) : 0;
+      accounts[currentAccountId].totalAsset = displayedTotal;
+      accounts[currentAccountId].holdProfit = displayedHoldProfit;
+      accounts[currentAccountId].holdRate = principalBase > 0
+        ? (displayedHoldProfit / principalBase * 100) : 0;
       accounts[currentAccountId].fundCount = funds.length;
       accounts[currentAccountId].lastUpdate = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
     }
@@ -2529,14 +2560,45 @@ function getFundDisplayRate(fund){
   return Number.isFinite(liveRate) ? liveRate : (Number(fund && fund.rate) || 0);
 }
 
+function getFundPrincipalAmount(fund){
+  var baseAmount = Number(fund && fund.amount) || 0;
+  var baseHold = Number(fund && fund.hold) || 0;
+  return Math.max(0, baseAmount - baseHold);
+}
+
+function getPortfolioPrincipalBase(){
+  return funds.reduce(function(s, fund){
+    return s + getFundPrincipalAmount(fund);
+  }, 0);
+}
+
+function parseNavDateValue(navDate){
+  var match = String(navDate || '').match(/\d{4}-\d{2}-\d{2}/);
+  return match ? match[0] : '';
+}
+
+function getLatestConfirmedNavDate(){
+  return funds.reduce(function(latest, fund){
+    var nextDate = parseNavDateValue(fund && fund.navDate);
+    return nextDate && nextDate > latest ? nextDate : latest;
+  }, '');
+}
+
+function isConfirmedDataStale(){
+  var latestDate = getLatestConfirmedNavDate();
+  if(!latestDate) return true;
+  var today = new Date().toISOString().slice(0, 10);
+  return latestDate < today;
+}
+
 function syncCurrentAccountMarketSummary(){
   var acct = accounts[currentAccountId];
   if(!acct) return;
   var total = funds.reduce(function(s,f){ return s + getFundDisplayAmount(f); }, 0);
-  var holdProfit = funds.reduce(function(s,f){ return s + (Number(f.hold) || 0); }, 0);
+  var holdProfit = total - getPortfolioPrincipalBase();
   acct.totalAsset = total;
   acct.holdProfit = holdProfit;
-  acct.holdRate = total > 0 ? holdProfit / Math.max(total - holdProfit, 1) * 100 : 0;
+  acct.holdRate = total > 0 ? holdProfit / Math.max(getPortfolioPrincipalBase(), 1) * 100 : 0;
   acct.fundCount = funds.length;
   acct.lastUpdate = new Date().toISOString().slice(0, 10);
 }
@@ -2602,14 +2664,17 @@ function updateKPIs(){
   // 从 funds 数组动态计算，实时估算优先，静态持仓兜底
   var total = funds.reduce(function(s,f){ return s + getFundDisplayAmount(f); }, 0);
   var yesterdayProfit = funds.reduce(function(s,f){ return s + getFundDisplayYesterday(f); }, 0);
-  var holdProfit = funds.reduce(function(s,f){ return s + (f.hold || 0); }, 0);
-  var yesterdayPct = total > 0 ? (yesterdayProfit / (total - yesterdayProfit) * 100) : 0;
-  var holdPct = total > 0 ? (holdProfit / (total - holdProfit) * 100) : 0;
+  var principalBase = getPortfolioPrincipalBase();
+  var holdProfit = total - principalBase;
+  var yesterdayPct = total > 0 ? (yesterdayProfit / Math.max(total - yesterdayProfit, 1) * 100) : 0;
+  var holdPct = principalBase > 0 ? (holdProfit / principalBase * 100) : 0;
   totalAsset = total;
 
   // P2: 计算已确认的昨日收益（不含实时估算）
   var confirmedYesterday = funds.reduce(function(s,f){ return s + (Number(f.yesterday) || 0); }, 0);
   var hasLiveData = funds.some(function(f){ return typeof f.liveYesterday === 'number' && Number.isFinite(f.liveYesterday); });
+  var confirmedDataStale = isConfirmedDataStale();
+  var latestConfirmedDate = getLatestConfirmedNavDate();
 
   var el;
   if((el = document.getElementById('kpiTotal'))) el.textContent = formatYuan(total, 0);
@@ -2619,8 +2684,12 @@ function updateKPIs(){
     el.className = 'kpi-value ' + (yesterdayProfit >= 0 ? 'red' : 'green');
   }
   if((el = document.getElementById('kpiYesterdayPct'))){
+    if(confirmedDataStale && !hasLiveData){
+      el.textContent = latestConfirmedDate ? ('上次披露 ' + latestConfirmedDate) : '等待最新净值';
+      el.className = 'kpi-sub';
+    }
     // P2: 如果有实时估算数据，显示对比
-    if(hasLiveData && Math.abs(yesterdayProfit - confirmedYesterday) > 0.01){
+    else if(hasLiveData && Math.abs(yesterdayProfit - confirmedYesterday) > 0.01){
       var diffEst = yesterdayProfit - confirmedYesterday;
       var diffSign = diffEst >= 0 ? '+' : '';
       el.innerHTML = '<span class="' + (yesterdayPct >= 0 ? 'red' : 'green') + '">' + (yesterdayPct >= 0 ? '+' : '') + yesterdayPct.toFixed(2) + '%</span>'
@@ -2646,6 +2715,18 @@ function updateKPIs(){
   if((el = document.getElementById('kpiEstProfit'))){
     el.textContent = (yesterdayProfit >= 0 ? '+' : '-') + formatYuan(Math.abs(yesterdayProfit), 2);
     el.className = 'kpi-value ' + (yesterdayProfit >= 0 ? 'red' : 'green');
+  }
+  if(confirmedDataStale && !hasLiveData){
+    if((el = document.getElementById('kpiStatusYesterday'))) el.textContent = '待更新';
+    if((el = document.getElementById('kpiStatusTotal'))) el.textContent = '待校准';
+    if((el = document.getElementById('kpiStatusHold'))) el.textContent = '待校准';
+    if((el = document.getElementById('kpiStatusTotalProfit'))) el.textContent = '待校准';
+  }
+  if(hasLiveData){
+    if((el = document.getElementById('kpiStatusTotal'))) el.textContent = '估算中 ⚡';
+    if((el = document.getElementById('kpiStatusYesterday'))) el.textContent = '估算中 ⚡';
+    if((el = document.getElementById('kpiStatusHold'))) el.textContent = '估算中 ⚡';
+    if((el = document.getElementById('kpiStatusTotalProfit'))) el.textContent = '估算中 ⚡';
   }
 
   // P2: 如果有实时估算，更新总资产 KPI 的对比提示
@@ -2844,7 +2925,7 @@ function switchStyle(style){
 // ===== 渲染持仓明细 =====
 function renderHoldings(){
   const pct = (amt) => totalAsset > 0 ? (amt/totalAsset*100).toFixed(1) : '0.0';
-  document.getElementById('holdingsBody').innerHTML = funds.map(f=>{
+  document.getElementById('holdingsBody').innerHTML = funds.map((f, i)=>{
     const amount = getFundDisplayAmount(f);
     const yesterday = getFundDisplayYesterday(f);
     const rate = getFundDisplayRate(f);
@@ -2852,11 +2933,12 @@ function renderHoldings(){
     <tr>
       <td>${escapeHtml(f.name)}</td>
       <td><span class="tag ${typeTagClass[f.type]}">${typeLabel[f.type]}</span></td>
-      <td class="gray">${f.share.toFixed(2)}</td>
+      <td class="gray">${(f.share||0).toFixed(2)}</td>
+      <td style="font-weight:600;color:var(--clr-primary-600)" onclick="openNavUpdate(${i})" title="点击更新净值" role="button" tabindex="0">${(f.nav||0).toFixed(4)}</td>
       <td>${formatYuan(amount, 2)}</td>
       <td>${pct(amount)}%</td>
-      <td class="${yesterday>=0?'red':'green'}">${yesterday!==0?(yesterday>0?'+':'')+yesterday.toFixed(2):'—'}</td>
-      <td class="red">${f.hold>0?'+'+f.hold.toFixed(2):'—'}</td>
+      <td class="${yesterday>=0?'red':'green'}">${yesterday!==0?(yesterday>0?'+':'')+formatYuan(yesterday,2):'—'}</td>
+      <td class="${(f.hold||0)>=0?'red':'green'}">${(f.hold||0)!==0?((f.hold>0?'+':'')+formatYuan(f.hold,2)):'—'}</td>
       <td class="${rate>=0?'red':'green'}">${rate!==0?(rate>0?'+':'')+rate.toFixed(2)+'%':'—'}</td>
     </tr>`;
   }).join('');
@@ -2868,6 +2950,44 @@ function renderHoldings(){
       return `<tr><td>${escapeHtml(f.name)}</td><td>${formatYuan(amount, 2)}</td><td>${pct(amount)}%</td><td class="${rate>=0?'red':'green'}">${rate>=0?'+':''}${rate.toFixed(2)}%</td></tr>`;
     }).join('');
   });
+}
+
+// ===== 更新基金净值（点击净值列触发）=====
+function openNavUpdate(index){
+  var f = funds[index]; if(!f) return;
+  var currentNav = f.nav || 0;
+  var promptMsg = f.name + '\n\n当前净值：' + currentNav.toFixed(4)
+    + '\n份额：' + (f.share||0).toFixed(2)
+    + '\n当前金额：¥' + (f.amount||0).toFixed(2)
+    + '\n\n输入最新净值（例如 1.9520）：';
+  var input = prompt(promptMsg, currentNav.toFixed(4));
+  if(input === null || input === '') return;
+  var newNav = parseFloat(input);
+  if(!Number.isFinite(newNav) || newNav <= 0){ showToast('⚠️ 请输入有效的净值（大于0的数字）', 'error'); return; }
+  
+  var oldAmount = f.amount || 0;
+  var newAmount = (f.share || 0) * newNav;
+  var costBasis = oldAmount - (f.hold || 0); // 反推成本基础
+  
+  // 更新基金数据
+  f.nav = newNav;
+  f.yesterday = newAmount - oldAmount;
+  f.amount = newAmount;
+  f.hold = newAmount - costBasis;
+  f.rate = costBasis > 0 ? (f.hold / costBasis * 100) : 0;
+  f.navDate = new Date().toISOString().slice(0, 10) + '(手动更新)';
+  f.navStatus = '已披露';
+  // 清除实时估算数据（净值更新后以确认为准）
+  delete f.liveYesterday; delete f.liveAmount; delete f.liveRate; delete f.liveSource; delete f.liveTime;
+  
+  saveFundsData();
+  renderHoldings();
+  updateKPIs();
+  renderTop3();
+  renderRebalance();
+  renderPlan();
+  updateAccountSummaryUI();
+  showToast('✅ ' + f.name.substring(0, 8) + '… 净值已更新：' + oldAmount.toFixed(2) + ' → ' + newAmount.toFixed(2) + '（' + (f.yesterday>=0?'+':'') + f.yesterday.toFixed(2) + '）', 'success');
 }
 
 // ===== 渲染再平衡 =====
@@ -3394,6 +3514,7 @@ function calcPreMarket(){
     return;
   }
   let totalEstProfit = 0;
+  const baseTotal = getPortfolioBaseTotal();
   const rows = funds.map(f => {
     const idxDef = PREMARKET_INDICES.find(i => i.ref === f.ref);
     const indexChange = idxDef && premarketIndexValues[idxDef.key] !== undefined ? premarketIndexValues[idxDef.key] : 0;
@@ -3418,13 +3539,13 @@ function calcPreMarket(){
   document.getElementById('premarketBody').innerHTML = rows;
   document.getElementById('premarketFundTableWrap').style.display = 'block';
   document.getElementById('pmTableTitle').textContent = '📋 各基金盘前估算明细（手动输入）';
-  const newTotal = totalAsset + totalEstProfit;
-  const rateVal = totalAsset > 0 ? (totalEstProfit / totalAsset * 100) : 0;
+  const newTotal = baseTotal + totalEstProfit;
+  const rateVal = baseTotal > 0 ? (totalEstProfit / baseTotal * 100) : 0;
   const dir = totalEstProfit > 0 ? 'up' : totalEstProfit < 0 ? 'down' : 'flat';
   ['pmResTotal','pmResProfit','pmResRate'].forEach(id => document.getElementById(id).className = 'premarket-result-item ' + dir);
   document.getElementById('pmValTotal').textContent = `¥${newTotal.toFixed(2)}`;
   document.getElementById('pmValTotal').className = 'premarket-result-value ' + dir;
-  document.getElementById('pmSubTotal').textContent = `vs 昨日收盘 ¥${totalAsset.toFixed(2)}`;
+  document.getElementById('pmSubTotal').textContent = `vs 昨日收盘 ¥${baseTotal.toFixed(2)}`;
   document.getElementById('pmValProfit').textContent = totalEstProfit >= 0 ? `+¥${totalEstProfit.toFixed(2)}` : `¥${totalEstProfit.toFixed(2)}`;
   document.getElementById('pmValProfit').className = 'premarket-result-value ' + dir;
   document.getElementById('pmSubProfit').textContent = dir === 'up' ? '↑ 预估盈利' : dir === 'down' ? '↓ 预估亏损' : '— 持平';
@@ -4498,8 +4619,8 @@ function renderFeatureRanking(){
 let accounts = [
   {
     id:0, name:'京东金融', icon:'🏦', platform:'京东金融',
-    totalAsset:10920.20, holdProfit:+736.90, holdRate:7.23,
-    fundCount:15, dataSource:'京东金融', lastUpdate:'刚刚',
+    totalAsset:13365.34, holdProfit:+252.04, holdRate:1.92,
+    fundCount:16, dataSource:'京东金融', lastUpdate:'参考快照 2026-06-25',
     investorName:'王先生', age:32, goalType:'退休储备',
     riskLevel:'稳健型', monthlyInvest:3000, targetAmount:2850000,
     fundsData: defaultFunds, tradesData: defaultTrades
@@ -4530,9 +4651,9 @@ function switchAccount(id){
   if(!loadedFromStorage){
     // localStorage 无数据，用账号内置数据或默认数据
     if(acct.fundsData && acct.fundsData.length > 0){
-      funds = acct.fundsData;
+      funds = sanitizeFundsCollection(acct.fundsData);
     } else {
-      funds = defaultFunds;
+      funds = sanitizeFundsCollection(defaultFunds);
     }
   }
   trades = acct.tradesData || [];
@@ -5287,13 +5408,15 @@ function normalizeOcrFund(f){
 function syncCurrentAccountFromRuntime(){
   var acct = accounts[currentAccountId];
   if(!acct) return;
+  funds = sanitizeFundsCollection(funds);
   var total = funds.reduce(function(s,f){ return s + (toNumber(f.amount) || 0); }, 0);
-  var holdProfit = funds.reduce(function(s,f){ return s + (toNumber(f.hold) || 0); }, 0);
-  acct.fundsData = funds;
+  var principalBase = getPortfolioPrincipalBase();
+  var holdProfit = total - principalBase;
+  acct.fundsData = sanitizeFundsCollection(funds);
   acct.tradesData = trades;
   acct.totalAsset = total;
   acct.holdProfit = holdProfit;
-  acct.holdRate = total > holdProfit && total > 0 ? holdProfit / (total - holdProfit) * 100 : 0;
+  acct.holdRate = principalBase > 0 ? holdProfit / principalBase * 100 : 0;
   acct.fundCount = funds.length;
   acct.lastUpdate = 'OCR导入';
   totalAsset = total;
