@@ -47,9 +47,29 @@ assert.equal(
 );
 
 assert.equal(
-  /fund-dashboard-v1\.4/.test(serviceWorker),
+  /fund-dashboard-v1\.5/.test(serviceWorker),
   true,
   'service worker cache version must be bumped after asset changes'
+);
+
+assert.match(
+  serviceWorker,
+  /function isPageRequest[\s\S]*url\.pathname\.endsWith\('\.html'\)/,
+  'service worker must detect HTML page requests'
+);
+
+assert.match(
+  serviceWorker,
+  /if \(isPageRequest\(request, url\)\) \{[\s\S]*event\.respondWith\(networkFirst\(request\)\)/,
+  'HTML pages must use network-first so deployments are not hidden by stale PWA cache'
+);
+
+assert.equal(
+  serviceWorker.includes('./mobile-dashboard.html') &&
+    serviceWorker.includes('./src/mobile-dashboard.css') &&
+    serviceWorker.includes('./src/mobile-dashboard.js'),
+  true,
+  'service worker must include mobile dashboard assets'
 );
 
 console.log('dashboard quality tests passed');
