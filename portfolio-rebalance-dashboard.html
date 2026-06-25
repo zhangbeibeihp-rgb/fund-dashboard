@@ -2371,9 +2371,16 @@ function loadFundsData(){
 function saveFundsData(){
   try {
     localStorage.setItem(STORAGE_FUNDS_KEY, JSON.stringify(funds));
-    // 自动同步到当前账号的 fundsData
+    // 自动同步到当前账号的 fundsData 和摘要数据
     if(accounts[currentAccountId]){
       accounts[currentAccountId].fundsData = funds;
+      // 更新账号摘要信息，确保侧边栏卡片显示正确
+      accounts[currentAccountId].totalAsset = totalAsset;
+      accounts[currentAccountId].holdProfit = funds.reduce(function(s,f){ return s + (f.hold || 0); }, 0);
+      accounts[currentAccountId].holdRate = accounts[currentAccountId].totalAsset > 0
+        ? (accounts[currentAccountId].holdProfit / (accounts[currentAccountId].totalAsset - accounts[currentAccountId].holdProfit) * 100) : 0;
+      accounts[currentAccountId].fundCount = funds.length;
+      accounts[currentAccountId].lastUpdate = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
     }
     // 也尝试保存到 Supabase（如果已登录）
     if(typeof syncFundsToCloud === 'function') syncFundsToCloud();
@@ -2867,10 +2874,10 @@ function renderHoldings(){
 function renderRebalance(){
   const s = STYLES[currentStyle];
   const a = s.alloc;
-  const equityTotal = funds.filter(f=>f.type==='mixed'||f.type==='index'||f.type==='stock').reduce((s,f)=>s+f.amount,0);
-  const bondTotal = funds.filter(f=>f.type==='bond').reduce((s,f)=>s+f.amount,0);
-  const goldTotal = funds.filter(f=>f.type==='gold').reduce((s,f)=>s+f.amount,0);
-  const cashTotal = funds.filter(f=>f.type==='cash').reduce((s,f)=>s+f.amount,0);
+  const equityTotal = funds.filter(f=>f.type==='mixed'||f.type==='index'||f.type==='stock').reduce((s,f)=>s+getFundDisplayAmount(f),0);
+  const bondTotal = funds.filter(f=>f.type==='bond').reduce((s,f)=>s+getFundDisplayAmount(f),0);
+  const goldTotal = funds.filter(f=>f.type==='gold').reduce((s,f)=>s+getFundDisplayAmount(f),0);
+  const cashTotal = funds.filter(f=>f.type==='cash').reduce((s,f)=>s+getFundDisplayAmount(f),0);
   const rows = [
     {name:'权益类基金（混合+指数+股票）',cur:equityTotal,target:a.equity},
     {name:'债券类基金',cur:bondTotal,target:a.bond},
@@ -2928,7 +2935,7 @@ function renderPlan(){
   document.getElementById('planBody').innerHTML = Object.keys(a).map(k=>{
     const tgt = a[k], tgtAmt = totalAsset*tgt/100;
     const typeMap = {equity:['mixed','index','stock'], bond:['bond'], gold:['gold'], cash:['cash']};
-    const cur = funds.filter(f=>typeMap[k]?.includes(f.type)).reduce((s,f)=>s+f.amount,0);
+    const cur = funds.filter(f=>typeMap[k]?.includes(f.type)).reduce((s,f)=>s+getFundDisplayAmount(f),0);
     const gap = tgtAmt-cur;
     return `<tr>
       <td><strong>${labels[k]}</strong></td><td>${tgt}%</td><td>¥${tgtAmt.toFixed(0)}</td><td>¥${cur.toFixed(0)}</td>
@@ -4518,13 +4525,15 @@ function switchAccount(id){
   document.getElementById('camUpdate').textContent = '更新于 '+acct.lastUpdate;
 
   // ===== 加载账号专属持仓数据 =====
-  if(!acct.fundsData || acct.fundsData.length === 0){
-    // 如果账号没有持仓数据，尝试从 localStorage 加载
-    if(!loadFundsData()){
+  // P0: 优先从 localStorage 加载，fallback 到账号默认数据
+  var loadedFromStorage = loadFundsData();
+  if(!loadedFromStorage){
+    // localStorage 无数据，用账号内置数据或默认数据
+    if(acct.fundsData && acct.fundsData.length > 0){
+      funds = acct.fundsData;
+    } else {
       funds = defaultFunds;
     }
-  } else {
-    funds = acct.fundsData;
   }
   trades = acct.tradesData || [];
   totalAsset = acct.totalAsset || 0;
@@ -4561,6 +4570,7 @@ function switchAccount(id){
   saveGoals();
   updateGoal();
   saveFundsData();     // P0: 切换账号后保存持仓数据
+  updateAccountSummaryUI(); // P0: 刷新侧边栏摘要卡片
 }
 
 function showAddAccount(){
