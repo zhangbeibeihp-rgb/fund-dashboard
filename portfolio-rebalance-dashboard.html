@@ -1110,7 +1110,7 @@ li{margin-bottom:2px}
           <button class="premarket-calc-btn" onclick="doNightRefresh()" style="font-size:12px;padding:5px 12px;background:#6366f1">🔄 手动刷新</button>
         </div>
       </div>
-      <p style="font-size:11px;color:#94a3b8;margin-bottom:4px">数据源：腾讯 qt.gtimg.cn · 每30秒自动刷新 · 参考「纳指估值」小程序</p>
+      <p style="font-size:11px;color:#94a3b8;margin-bottom:4px">数据源：腾讯 qt.gtimg.cn · 每30秒自动刷新 · 美股夜盘（北京时间 08:00–16:00，美东 20:00–04:00）</p>
 
       <!-- 美股指数行情 -->
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:10px" id="nightIndexGrid">
@@ -1129,23 +1129,6 @@ li{margin-bottom:2px}
             <th>基金名称</th><th>参考指数</th><th>指数涨跌</th><th>持仓金额</th><th style="color:#a855f7">预估盈亏</th><th style="color:#a855f7">预估金额</th>
           </tr></thead><tbody id="nightFundBody"></tbody></table>
         </div>
-      </div>
-    </div>
-
-    <!-- ===== 🌏 QDII 亚盘数据 ===== -->
-    <div class="card" style="margin-bottom:14px;border-left:4px solid #f59e0b">
-      <h2>🌏 QDII 亚盘数据 · 亚太市场实时指数</h2>
-      <p style="font-size:12px;color:#64748b;margin-bottom:12px">数据源：腾讯行情 qt.gtimg.cn · 覆盖港股/日股/韩股等亚太市场</p>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px" id="asiaIndexGrid">
-        <div class="us-index-card" id="asiaIdxHSI"><div class="us-idx-name">恒生指数</div><div class="us-idx-price" id="asiaHSIPrice">--</div><div class="us-idx-change" id="asiaHSIChange">--</div></div>
-        <div class="us-index-card" id="asiaIdxN225"><div class="us-idx-name">日经225</div><div class="us-idx-price" id="asiaN225Price">--</div><div class="us-idx-change" id="asiaN225Change">--</div></div>
-        <div class="us-index-card" id="asiaIdxKS11"><div class="us-idx-name">韩国KOSPI</div><div class="us-idx-price" id="asiaKS11Price">--</div><div class="us-idx-change" id="asiaKS11Change">--</div></div>
-        <div class="us-index-card" id="asiaIdxSTI"><div class="us-idx-name">新加坡海峡</div><div class="us-idx-price" id="asiaSTIPrice">--</div><div class="us-idx-change" id="asiaSTIChange">--</div></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap">
-        <span style="font-size:11px;color:#94a3b8" id="asiaIdxTime">⏳ 等待获取...</span>
-        <button class="premarket-calc-btn" onclick="fetchAsiaIndexData()" style="font-size:12px;padding:6px 14px;background:#f59e0b">🔄 刷新亚盘指数</button>
-        <span style="font-size:10px;color:#d97706;margin-left:auto">💡 亚盘交易时段：港股 09:30-16:00 / 日股 08:00-14:00（北京时间）</span>
       </div>
     </div>
 
@@ -3690,7 +3673,6 @@ document.addEventListener('DOMContentLoaded', function() {
     _origShowSection(name);
     if (name === 'estimate') {
       setTimeout(fetchNightIndexData, 300);
-      setTimeout(fetchAsiaIndexData, 600);
     }
   };
   setTimeout(fetchNightIndexData, 1200);
