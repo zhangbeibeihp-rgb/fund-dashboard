@@ -877,26 +877,29 @@ li{margin-bottom:2px}
 }
 .pc-brand strong{display:block;font-size:16px;color:#0f172a}
 .pc-brand span{display:block;font-size:12px;color:#64748b;margin-top:2px}
-.pc-workspace-shell{display:grid;grid-template-columns:220px minmax(0,1fr) 280px;gap:16px;align-items:start}
+.pc-workspace-shell{display:grid;grid-template-columns:200px minmax(0,1fr) 260px;gap:16px;align-items:start}
 .pc-side-nav{position:sticky;top:84px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:10px;display:grid;gap:6px}
-.pc-side-nav button{min-height:40px;border:0;border-radius:7px;background:transparent;text-align:left;color:#475569;font-weight:700;padding:0 12px;cursor:pointer}
+.pc-side-nav button{min-height:40px;border:0;border-radius:7px;background:transparent;text-align:left;color:#475569;font-weight:700;padding:0 12px;cursor:pointer;transition:.15s}
 .pc-side-nav button.active,.pc-side-nav button:hover{background:#eff6ff;color:#2563eb}
 .pc-main-content{min-width:0}
 .pc-main-content .kpi-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.pc-main-content .kpi-card{border-radius:8px;padding:14px 16px;box-shadow:0 1px 8px rgba(15,23,42,.06)}
+.pc-main-content .kpi-card{border-radius:12px;padding:14px 16px;box-shadow:0 1px 8px rgba(15,23,42,.06)}
 .pc-main-content .kpi-value{font-size:19px}
 .pc-main-content .top3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.pc-main-content .top3-item{border-radius:8px;box-shadow:0 1px 8px rgba(15,23,42,.06)}
+.pc-main-content .top3-item{border-radius:12px;box-shadow:0 1px 8px rgba(15,23,42,.06)}
 .pc-assist-panel{position:sticky;top:84px;display:grid;gap:12px}
-.pc-assist-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:14px}
+.pc-assist-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px}
 .pc-assist-card h2{font-size:14px;margin:0 0 10px;color:#0f172a}
 .pc-assist-card div{font-size:12px;color:#64748b;line-height:1.7}
 .pc-mobile-link{display:inline-flex;align-items:center;min-height:34px;padding:0 10px;border-radius:7px;background:#eff6ff;color:#2563eb;font-weight:700;text-decoration:none;white-space:nowrap}
 @media(max-width:1280px){
-  .pc-workspace-shell{grid-template-columns:200px minmax(0,1fr)}
+  .pc-workspace-shell{grid-template-columns:180px minmax(0,1fr) 240px}
+}
+@media(max-width:1150px){
+  .pc-workspace-shell{grid-template-columns:180px minmax(0,1fr)}
   .pc-assist-panel{grid-column:2;position:static;grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-@media(max-width:1100px){
+@media(max-width:900px){
   .pc-topbar{position:static;align-items:flex-start;flex-direction:column}
   .pc-workspace-shell{display:block}
   .pc-side-nav,.pc-assist-panel{position:static;margin-bottom:12px}
@@ -1058,34 +1061,34 @@ li{margin-bottom:2px}
   <!-- =========================================== -->
   <!-- SECTION 3: 再平衡 -->
   <!-- =========================================== -->
-  <!-- ===== 投资风格切换器 ===== -->
-  <div class="style-bar">
-    <div class="label">🎯 投资风格</div>
-    <div class="style-switcher">
-      <button class="style-btn" data-style="conservative" onclick="switchStyle('conservative')">
-        <span class="style-dot" data-c="conservative"></span> 保守型
-      </button>
-      <button class="style-btn active" data-style="steady" onclick="switchStyle('steady')">
-        <span class="style-dot" data-c="steady"></span> 稳健型
-      </button>
-      <button class="style-btn" data-style="balanced" onclick="switchStyle('balanced')">
-        <span class="style-dot" data-c="balanced"></span> 平衡型
-      </button>
-      <button class="style-btn" data-style="aggressive" onclick="switchStyle('aggressive')">
-        <span class="style-dot" data-c="aggressive"></span> 进取型
-      </button>
-      <button class="style-btn" data-style="radical" onclick="switchStyle('radical')">
-        <span class="style-dot" data-c="radical"></span> 激进型
-      </button>
-    </div>
-    <div class="style-info">
-      <b id="styleName">稳健型</b><br>
-      <span id="styleDesc">年化5-7% · 波动10-13% · 适合长期退休储备</span>
-    </div>
-  </div>
-
   <div id="sec-rebalance" data-pc-section="review" style="display:none">
     <div class="section-title">⚖️ 再平衡操作建议（<span id="rebalanceStyle">稳健型</span>）</div>
+
+    <!-- 投资风格切换器 -->
+    <div class="style-bar">
+      <div class="label">🎯 投资风格</div>
+      <div class="style-switcher">
+        <button class="style-btn" data-style="conservative" onclick="switchStyle('conservative')">
+          <span class="style-dot" data-c="conservative"></span> 保守型
+        </button>
+        <button class="style-btn active" data-style="steady" onclick="switchStyle('steady')">
+          <span class="style-dot" data-c="steady"></span> 稳健型
+        </button>
+        <button class="style-btn" data-style="balanced" onclick="switchStyle('balanced')">
+          <span class="style-dot" data-c="balanced"></span> 平衡型
+        </button>
+        <button class="style-btn" data-style="aggressive" onclick="switchStyle('aggressive')">
+          <span class="style-dot" data-c="aggressive"></span> 进取型
+        </button>
+        <button class="style-btn" data-style="radical" onclick="switchStyle('radical')">
+          <span class="style-dot" data-c="radical"></span> 激进型
+        </button>
+      </div>
+      <div class="style-info">
+        <b id="styleName">稳健型</b><br>
+        <span id="styleDesc">年化5-7% · 波动10-13% · 适合长期退休储备</span>
+      </div>
+    </div>
     <div class="card" style="margin-bottom:16px">
       <table>
         <thead><tr>
@@ -1220,43 +1223,21 @@ li{margin-bottom:2px}
         <div>☀️ 次日白天 → 基金公司计算 QDII 净值</div>
         <div>✅ ~20:00 → <strong style="color:#16a34a">净值披露，App 更新"昨日收益"</strong></div>
       </div>
-    </div>
-  </div>
-        </div>
-        <div style="background:#f8fafc;border-radius:12px;padding:16px">
-          <h3 style="font-size:14px;color:#1e293b;margin-bottom:10px">🇨🇳 A股基金（T+0披露）— 4支基金</h3>
-          <div style="font-size:12px;color:#64748b;line-height:2">
-            <div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#94a3b8;flex-shrink:0"></span> 06-23(北京周二) 09:30 — A股开盘</div>
-            <div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#94a3b8;flex-shrink:0"></span> 06-23(北京周二) 15:00 — A股收盘 → 净值计算依据</div>
-            <div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;flex-shrink:0"></span> 06-23(北京周二) 15:00-18:00 — 基金公司计算净值</div>
-            <div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0"></span> 06-23(北京周二) ~20:00 — <strong style="color:#16a34a">净值披露 → App更新"当日收益"</strong></div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0"></span> ✅ A股基金收益反映 <strong>06-23 当日</strong> 收盘数据，无时差</div>
-          </div>
+
+      <!-- A股基金净值披露时间轴 -->
+      <div style="background:#f8fafc;border-radius:12px;padding:16px;margin-top:12px">
+        <h3 style="font-size:14px;color:#1e293b;margin-bottom:10px">🇨🇳 A股基金（T+0披露）— 4支基金</h3>
+        <div style="font-size:12px;color:#64748b;line-height:2">
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#94a3b8;flex-shrink:0"></span> 09:30 — A股开盘</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#94a3b8;flex-shrink:0"></span> 15:00 — A股收盘 → 净值计算依据</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;flex-shrink:0"></span> 15:00-18:00 — 基金公司计算净值</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0"></span> ~20:00 — <strong style="color:#16a34a">净值披露 → App更新"当日收益"</strong></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0"></span> ✅ A股基金收益反映 <strong>当日</strong> 收盘数据，无时差</div>
         </div>
       </div>
+
       <div class="warn-box" style="margin-top:12px">
-        💡 <strong>关键区别：</strong>您在 06-23(周二) 看到的"昨日收益 +¥376.87"，其中 QDII 部分反映的是 <strong>06-22(美东周一)</strong> 的美股收盘数据（时差约12-13小时），而非 06-23 当天的盘中实时变动。<strong>美股 06-23 的盘中行情要等到北京时间 06-24 凌晨才收盘，06-24 晚间才能在 App 中看到对应的 QDII 收益。</strong>
-      </div>
-    </div>
-    <div class="grid-2">
-      <div class="card">
-        <h2>🎯 退休目标预估（60岁）</h2>
-        <table>
-          <tbody>
-            <tr><td>当前年龄</td><td>32岁</td></tr>
-            <tr><td>距退休</td><td>28年</td></tr>
-            <tr><td>当前总资产</td><td>¥10,920</td></tr>
-            <tr><td>月定投</td><td>¥3,000</td></tr>
-            <tr><td>假设年化收益</td><td id="planRate">6%</td></tr>
-            <tr><td><strong>60岁预估总额</strong></td><td><strong style="color:#16a34a" id="planTotal">¥266万</strong></td></tr>
-            <tr><td>当前进度</td><td id="planProgress">0.41%</td></tr>
-          </tbody>
-        </table>
-        <div class="tip-box" id="planTip">按6%年化+月投¥3,000，28年后复利效应显著。如果年化提升至8%，可达¥383万。</div>
-      </div>
-      <div class="card">
-        <h2>📉 不同年化收益情景模拟（含月定投复利）</h2>
-        <div class="chart-box"><canvas id="scenarioChart"></canvas></div>
+        💡 <strong>关键区别：</strong>您看到的"昨日收益"中，QDII 部分反映的是 <strong>前一日美东</strong> 的美股收盘数据（时差约12-13小时），而非当天的盘中实时变动。<strong>美股当天的盘中行情要等到北京时间次日凌晨才收盘，次日晚间才能在 App 中看到对应的 QDII 收益。</strong>
       </div>
     </div>
   </div>
@@ -1457,6 +1438,27 @@ li{margin-bottom:2px}
         <thead><tr><th>资产类别</th><th>目标比例</th><th>目标金额</th><th>当前金额</th><th>缺口</th><th>推荐标的</th></tr></thead>
         <tbody id="planBody"></tbody>
       </table>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h2>🎯 退休目标预估（60岁）</h2>
+        <table>
+          <tbody>
+            <tr><td>当前年龄</td><td>32岁</td></tr>
+            <tr><td>距退休</td><td>28年</td></tr>
+            <tr><td>当前总资产</td><td>¥10,920</td></tr>
+            <tr><td>月定投</td><td>¥3,000</td></tr>
+            <tr><td>假设年化收益</td><td id="planRate">6%</td></tr>
+            <tr><td><strong>60岁预估总额</strong></td><td><strong style="color:#16a34a" id="planTotal">¥266万</strong></td></tr>
+            <tr><td>当前进度</td><td id="planProgress">0.41%</td></tr>
+          </tbody>
+        </table>
+        <div class="tip-box" id="planTip">按6%年化+月投¥3,000，28年后复利效应显著。如果年化提升至8%，可达¥383万。</div>
+      </div>
+      <div class="card">
+        <h2>📉 不同年化收益情景模拟（含月定投复利）</h2>
+        <div class="chart-box"><canvas id="scenarioChart"></canvas></div>
+      </div>
     </div>
     <div class="grid-2">
       <div class="card">
@@ -1857,10 +1859,6 @@ li{margin-bottom:2px}
     </div>
   </div>
 
-  <div class="footer">
-    ⚠️ <strong>免责声明：</strong>本仪表盘仅供参考，不构成投资建议。市场有风险，投资需谨慎。<br>
-    基金组合管理仪表盘 v7.1 ｜ 多账号系统 ｜ 多目标管理(localStorage持久化) ｜ 智能测算 ｜ 投资风格切换 ｜ 基金观察池 ｜ AI预测 ｜ QDII净值来源日期
-  </div>
   <section id="sec-settings" data-pc-section="settings" style="display:none">
     <div class="section-title">设置</div>
     <div class="grid-2">
@@ -1909,6 +1907,11 @@ li{margin-bottom:2px}
       </div>
     </div>
   </section>
+
+  <div class="footer">
+    ⚠️ <strong>免责声明：</strong>本仪表盘仅供参考，不构成投资建议。市场有风险，投资需谨慎。<br>
+    基金组合管理仪表盘 v7.1 ｜ 多账号系统 ｜ 多目标管理(localStorage持久化) ｜ 智能测算 ｜ 投资风格切换 ｜ 基金观察池 ｜ AI预测 ｜ QDII净值来源日期
+  </div>
     </main>
 
     <aside class="pc-assist-panel">
