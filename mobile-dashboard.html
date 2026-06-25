@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>基金组合管理 | 手机端</title>
+  <meta name="theme-color" content="#f6f8fb">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="src/mobile-dashboard.css">
+</head>
+<body>
+  <div class="mobile-app">
+    <header class="mobile-topbar">
+      <div>
+        <p class="mobile-eyebrow">基金组合</p>
+        <h1 id="mobileAccountName">本地账号</h1>
+      </div>
+      <button class="mobile-sync-pill" id="mobileSyncStatus" type="button">本地保存</button>
+    </header>
+
+    <main class="mobile-main">
+      <section class="mobile-panel active" id="mobileHomePanel" data-mobile-panel="home" aria-labelledby="mobileHomeTitle">
+        <div class="mobile-asset-card">
+          <span id="mobileHomeTitle">总资产</span>
+          <strong id="mobileTotalAsset">¥0.00</strong>
+          <small id="mobileAssetMeta">暂无持仓</small>
+        </div>
+        <div class="mobile-metric-grid">
+          <div class="mobile-metric"><span>昨日收益</span><strong id="mobileYesterday">¥0.00</strong></div>
+          <div class="mobile-metric"><span>持有收益</span><strong id="mobileHoldProfit">¥0.00</strong></div>
+          <div class="mobile-metric"><span>目标进度</span><strong id="mobileGoalPct">0%</strong></div>
+          <div class="mobile-metric"><span>基金数量</span><strong id="mobileFundCount">0</strong></div>
+        </div>
+        <div class="mobile-alert-card" id="mobileRiskCard">暂无风险复核项</div>
+        <div class="mobile-section-head">
+          <h2>最近交易</h2>
+          <button type="button" data-mobile-tab="record">记一笔</button>
+        </div>
+        <div id="mobileRecentTrades" class="mobile-list-empty">暂无交易记录</div>
+      </section>
+
+      <section class="mobile-panel" id="mobileHoldingsPanel" data-mobile-panel="holdings" aria-labelledby="mobileHoldingsTitle">
+        <div class="mobile-panel-head">
+          <h2 id="mobileHoldingsTitle">持仓</h2>
+          <span>点击卡片查看详情</span>
+        </div>
+        <div class="mobile-filter-row" aria-label="持仓筛选">
+          <button class="active" type="button" data-mobile-filter="all">全部</button>
+          <button type="button" data-mobile-filter="qdii">QDII</button>
+          <button type="button" data-mobile-filter="cn">A股</button>
+          <button type="button" data-mobile-filter="watch">观察</button>
+        </div>
+        <div id="mobileFundList" class="mobile-fund-list"></div>
+      </section>
+
+      <section class="mobile-panel" id="mobileRecordPanel" data-mobile-panel="record" aria-labelledby="mobileRecordTitle">
+        <div class="mobile-upload-card">
+          <h2 id="mobileRecordTitle">上传基金截图</h2>
+          <p>图片仅在浏览器本地识别，浏览器本地 OCR 不会把截图上传到后端 OCR 服务，也不需要任何 OCR 密钥。</p>
+          <label class="mobile-primary-button">
+            上传截图
+            <input id="mobileOcrInput" type="file" accept="image/*" multiple hidden>
+          </label>
+        </div>
+        <div id="mobileOcrResult" class="mobile-ocr-result" aria-live="polite"></div>
+        <form id="mobileTradeForm" class="mobile-form">
+          <h2>手动记一笔</h2>
+          <input id="mobileTradeFund" name="fund" placeholder="基金名称" required>
+          <input id="mobileTradeDate" name="date" type="date" required>
+          <select id="mobileTradeAction" name="action">
+            <option value="buy">买入</option>
+            <option value="sell">卖出</option>
+          </select>
+          <input id="mobileTradeAmount" name="amount" type="number" min="0" step="0.01" placeholder="金额" required>
+          <input id="mobileTradeShare" name="share" type="number" min="0" step="0.0001" placeholder="份额">
+          <button class="mobile-primary-button" type="submit">保存交易</button>
+        </form>
+      </section>
+
+      <section class="mobile-panel" id="mobileGoalPanel" data-mobile-panel="goal" aria-labelledby="mobileGoalTitle">
+        <div class="mobile-goal-card">
+          <span id="mobileGoalTitle">目标进度</span>
+          <strong id="mobileGoalProgress">0%</strong>
+          <div class="mobile-progress"><i id="mobileGoalBar"></i></div>
+        </div>
+        <div id="mobileGoalSummary" class="mobile-info-list"></div>
+        <div id="mobileRebalanceSummary" class="mobile-alert-card">暂无再平衡偏离</div>
+      </section>
+
+      <section class="mobile-panel" id="mobileProfilePanel" data-mobile-panel="profile" aria-labelledby="mobileProfileTitle">
+        <div class="mobile-panel-head">
+          <h2 id="mobileProfileTitle">我的</h2>
+          <span id="mobileProfileMeta">本地数据优先，云端同步沿用 PC 工作台</span>
+        </div>
+        <button type="button" class="mobile-setting-row" onclick="MobileDashboard.exportData()">导出数据</button>
+        <label class="mobile-setting-row">导入数据<input type="file" accept=".json" hidden onchange="MobileDashboard.importData(event)"></label>
+        <button type="button" class="mobile-setting-row" onclick="MobileDashboard.openPrivacyDialog()">隐私说明</button>
+        <button type="button" class="mobile-setting-row danger" onclick="MobileDashboard.clearAllUserData()">删除数据</button>
+        <button type="button" class="mobile-setting-row" onclick="MobileDashboard.logout()">退出登录</button>
+      </section>
+    </main>
+
+    <nav class="mobile-tabbar" aria-label="手机底部导航">
+      <button class="active" type="button" data-mobile-tab="home" aria-label="首页"><span>首页</span></button>
+      <button type="button" data-mobile-tab="holdings" aria-label="持仓"><span>持仓</span></button>
+      <button type="button" data-mobile-tab="record" aria-label="记录"><span>记录</span></button>
+      <button type="button" data-mobile-tab="goal" aria-label="目标"><span>目标</span></button>
+      <button type="button" data-mobile-tab="profile" aria-label="我的"><span>我的</span></button>
+    </nav>
+
+    <div class="mobile-sheet" id="mobileSheet" aria-hidden="true"></div>
+  </div>
+
+  <script src="src/config.js"></script>
+  <script src="src/supabase.js"></script>
+  <script src="src/auth.js"></script>
+  <script src="src/data-layer.js"></script>
+  <script src="src/realtime.js"></script>
+  <script src="src/ocr-client.js"></script>
+  <script src="src/sync.js"></script>
+  <script src="src/mobile-dashboard.js"></script>
+</body>
+</html>

@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>基金组合管理仪表盘 v7.1 · 多账号 · 多目标 · AI投资顾问</title>
+<title>基金组合管理仪表盘 v7.1 · 多账号 · 多目标 · 智能测算</title>
 <!-- P2-1: PWA 支持 -->
 <meta name="theme-color" content="#6366f1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="基金仪表盘">
-<meta name="description" content="个人基金组合管理仪表盘 — 多账号、多目标、AI投资顾问">
+<meta name="description" content="个人基金组合管理仪表盘 — 多账号、多目标、智能测算">
 <link rel="manifest" href="manifest.json">
 <script>
 // P1-3: Chart.js 多CDN回退加载
@@ -46,7 +46,7 @@ body{
 }
 .container{max-width:1300px;margin:0 auto}
 
-/* ===== Header (New: Account + AI Goal) ===== */
+/* ===== Header (New: Account + Smart Goal) ===== */
 .header-new{
   background:#fff;padding:20px 28px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);
   margin-bottom:16px;display:flex;gap:24px;align-items:flex-start;
@@ -79,7 +79,7 @@ body{
 }
 .acct-add-btn:hover{border-color:#6366f1;color:#6366f1;background:#eef2ff}
 
-/* AI Goal Input Section */
+/* Smart Goal Input Section */
 .ai-goal-section{margin-top:4px}
 .ai-goal-input-wrap{background:#fafbff;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px 16px;transition:.25s}
 .ai-goal-input-wrap:focus-within{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.08)}
@@ -106,7 +106,7 @@ body{
 .ai-goal-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(99,102,241,.35)}
 .ai-goal-btn:active{transform:translateY(0)}
 
-/* AI Advice Output */
+/* Smart Analysis Output */
 .ai-advice-output{
   margin-top:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;
   animation:slideDown .3s ease;
@@ -730,6 +730,21 @@ li{margin-bottom:2px}
 /* ===== P1-5: 数据导出导入按钮 ===== */
 .data-io-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;border:1px solid #c7d2fe;background:#f8faff;color:#6366f1;font-size:12px;cursor:pointer;transition:.2s}
 .data-io-btn:hover{background:#6366f1;color:#fff;border-color:#6366f1}
+.data-io-btn.danger{border-color:#fecaca;background:#fff7f7;color:#dc2626}
+.data-io-btn.danger:hover{background:#dc2626;color:#fff;border-color:#dc2626}
+.sync-status-badge{
+  display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;
+  border:1px solid #cbd5e1;background:#f8fafc;color:#475569;font-size:12px;font-weight:700;white-space:nowrap
+}
+.sync-status-badge::before{content:'';width:7px;height:7px;border-radius:50%;background:#94a3b8}
+.sync-status-badge[data-status="syncing"]{border-color:#fde68a;background:#fffbeb;color:#b45309}
+.sync-status-badge[data-status="syncing"]::before{background:#f59e0b}
+.sync-status-badge[data-status="synced"]{border-color:#bbf7d0;background:#f0fdf4;color:#15803d}
+.sync-status-badge[data-status="synced"]::before{background:#22c55e}
+.sync-status-badge[data-status="failed"]{border-color:#fecaca;background:#fef2f2;color:#dc2626}
+.sync-status-badge[data-status="failed"]::before{background:#ef4444}
+.privacy-list{padding-left:18px;color:#475569;font-size:13px;line-height:1.8;margin-top:10px}
+.privacy-list li{margin-bottom:4px}
 
 /* ===== P2-2: 骨架屏加载 ===== */
 .skeleton{background:linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px}
@@ -853,120 +868,59 @@ li{margin-bottom:2px}
 :focus-visible{outline:2px solid #6366f1;outline-offset:2px}
 .kpi-card:focus-visible,.btn:focus-visible,.acct-tab:focus-visible,.goal-tab:focus-visible{outline:2px solid #6366f1;outline-offset:2px}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* ===== PC Workspace Shell ===== */
+.pc-topbar{
+  position:sticky;top:0;z-index:40;background:#fff;border:1px solid #e2e8f0;border-radius:8px;
+  padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  box-shadow:0 2px 10px rgba(15,23,42,.05)
+}
+.pc-brand strong{display:block;font-size:16px;color:#0f172a}
+.pc-brand span{display:block;font-size:12px;color:#64748b;margin-top:2px}
+.pc-workspace-shell{display:grid;grid-template-columns:220px minmax(0,1fr) 280px;gap:16px;align-items:start}
+.pc-side-nav{position:sticky;top:84px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:10px;display:grid;gap:6px}
+.pc-side-nav button{min-height:40px;border:0;border-radius:7px;background:transparent;text-align:left;color:#475569;font-weight:700;padding:0 12px;cursor:pointer}
+.pc-side-nav button.active,.pc-side-nav button:hover{background:#eff6ff;color:#2563eb}
+.pc-main-content{min-width:0}
+.pc-assist-panel{position:sticky;top:84px;display:grid;gap:12px}
+.pc-assist-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:14px}
+.pc-assist-card h2{font-size:14px;margin:0 0 10px;color:#0f172a}
+.pc-assist-card div{font-size:12px;color:#64748b;line-height:1.7}
+.pc-mobile-link{display:inline-flex;align-items:center;min-height:34px;padding:0 10px;border-radius:7px;background:#eff6ff;color:#2563eb;font-weight:700;text-decoration:none;white-space:nowrap}
+@media(max-width:1100px){
+  .pc-topbar{position:static;align-items:flex-start;flex-direction:column}
+  .pc-workspace-shell{display:block}
+  .pc-side-nav,.pc-assist-panel{position:static;margin-bottom:12px}
+}
 </style>
 </head>
 <body>
 <div class="container">
 
-  <!-- ===== HEADER: 账号系统 + AI投资目标 ===== -->
-  <div class="header-new">
-    <!-- 左侧：标题+账号 -->
-    <div class="header-left">
-      <div class="header-top">
-        <h1>📊 基金组合管理仪表盘</h1>
-        <div class="account-switcher">
-          <div class="account-tabs" id="accountTabs">
-            <button class="acct-tab active" data-acct="0" onclick="switchAccount(0)">
-              <span class="acct-icon">🏦</span> 京东金融
-              <span class="acct-badge">15支</span>
-            </button>
-          </div>
-          <button class="acct-add-btn" onclick="showAddAccount()" title="添加账号">＋</button>
-          <button class="data-io-btn" onclick="exportData()" title="导出数据备份" aria-label="导出数据">📤 导出</button>
-          <label class="data-io-btn" title="导入数据恢复" aria-label="导入数据" style="cursor:pointer">📥 导入<input type="file" accept=".json" style="display:none" onchange="importData(event)"></label>
-          <button class="data-io-btn" id="logoutBtn" onclick="appLogout()" title="退出登录" aria-label="退出登录" style="display:none">🚪 退出</button>
-        </div>
-      </div>
-
-      <!-- AI 投资目标输入区 -->
-      <div class="ai-goal-section">
-        <div class="ai-goal-input-wrap">
-          <div class="ai-goal-label">
-            <span class="ai-glow"></span>
-            🤖 AI 投资顾问 — 告诉我你的投资目标
-          </div>
-          <div class="ai-goal-row">
-            <textarea id="aiGoalInput" class="ai-goal-textarea"
-              placeholder="例如：我想在55岁退休时有500万资产，目前每月能投5千，风险偏好稳健..."
-              rows="2" oninput="onGoalInput()"></textarea>
-            <button class="ai-goal-btn" id="aiGoalBtn" onclick="generateAIAdvice()">
-              💡 获取建议
-            </button>
-          </div>
-        </div>
-        <div class="ai-advice-output" id="aiAdviceOutput" style="display:none;">
-          <div class="ai-advice-header">
-            <span>🎯 AI 定制建议</span>
-            <span class="ai-advice-tag" id="aiAdviceTag">基于您的目标生成</span>
-          </div>
-          <div class="ai-advice-body" id="aiAdviceBody"></div>
-        </div>
-      </div>
+  <div class="pc-topbar">
+    <div class="pc-brand">
+      <strong>基金组合管理仪表盘</strong>
+      <span>资产记录 · 目标测算 · 风险复核</span>
     </div>
-
-    <!-- 右侧：当前账号概览 -->
-    <div class="header-right">
-      <div class="current-acct-card" id="currentAcctCard">
-        <div class="current-acct-name" id="currentAcctName">京东金融</div>
-        <div class="current-acct-total" id="currentAcctTotal">¥10,920.20</div>
-        <div class="current-acct-meta">
-          <span class="cam-item green" id="camProfit">+¥736.90 (+7.23%)</span>
-          <span class="cam-item" id="camFunds">15支基金</span>
-          <span class="cam-item gray" id="camUpdate">更新于 刚刚</span>
-        </div>
-      </div>
-      <div class="quick-actions">
-        <button class="qa-btn" onclick="showSection('goal')">🎯 设定目标</button>
-        <button class="qa-btn" onclick="showSection('rebalance')">⚖️ 再平衡</button>
-        <button class="qa-btn" onclick="showSection('aipredict')">🤖 AI预测</button>
-      </div>
-    </div>
+    <a class="pc-mobile-link" href="mobile-dashboard.html">手机端</a>
   </div>
 
-  <!-- ===== 投资风格切换器 ===== -->
-  <div class="style-bar">
-    <div class="label">🎯 投资风格</div>
-    <div class="style-switcher">
-      <button class="style-btn" data-style="conservative" onclick="switchStyle('conservative')">
-        <span class="style-dot" data-c="conservative"></span> 保守型
-      </button>
-      <button class="style-btn active" data-style="steady" onclick="switchStyle('steady')">
-        <span class="style-dot" data-c="steady"></span> 稳健型
-      </button>
-      <button class="style-btn" data-style="balanced" onclick="switchStyle('balanced')">
-        <span class="style-dot" data-c="balanced"></span> 平衡型
-      </button>
-      <button class="style-btn" data-style="aggressive" onclick="switchStyle('aggressive')">
-        <span class="style-dot" data-c="aggressive"></span> 进取型
-      </button>
-      <button class="style-btn" data-style="radical" onclick="switchStyle('radical')">
-        <span class="style-dot" data-c="radical"></span> 激进型
-      </button>
-    </div>
-    <div class="style-info">
-      <b id="styleName">稳健型</b><br>
-      <span id="styleDesc">年化5-7% · 波动10-13% · 适合长期退休储备</span>
-    </div>
-  </div>
+  <div class="pc-workspace-shell">
+    <aside class="pc-side-nav" aria-label="PC工作区导航">
+      <button class="active" type="button" data-pc-nav="overview" onclick="showPcGroup('overview')">总览</button>
+      <button type="button" data-pc-nav="holdings" onclick="showPcGroup('holdings')">持仓</button>
+      <button type="button" data-pc-nav="trades" onclick="showPcGroup('trades')">交易</button>
+      <button type="button" data-pc-nav="goal" onclick="showPcGroup('goal')">目标</button>
+      <button type="button" data-pc-nav="review" onclick="showPcGroup('review')">复核</button>
+      <button type="button" data-pc-nav="settings" onclick="showPcGroup('settings')">设置</button>
+    </aside>
 
-  <!-- ===== NAV ===== -->
-  <div class="nav">
-    <button class="nav-item active" onclick="showSection('overview')">总览</button>
-    <button class="nav-item" onclick="showSection('holdings')">持仓明细</button>
-    <button class="nav-item" onclick="showSection('rebalance')">再平衡</button>
-    <button class="nav-item" onclick="showSection('estimate')">预估金额</button>
-    <button class="nav-item" onclick="showSection('goal')">🎯 目标进度</button>
-    <button class="nav-item" onclick="showSection('trades')">加减仓记录</button>
-    <button class="nav-item" onclick="showSection('plan')">投资计划</button>
-    <button class="nav-item" onclick="showSection('styles')">风格对比</button>
-    <button class="nav-item" onclick="showSection('recommend')">💡 基金推荐池</button>
-    <button class="nav-item" onclick="showSection('aipredict')">🤖 AI预测</button>
-  </div>
+    <main class="pc-main-content">
 
   <!-- =========================================== -->
   <!-- SECTION 1: 总览 -->
   <!-- =========================================== -->
-  <div id="sec-overview">
+  <div id="sec-overview" data-pc-section="overview">
     <div class="kpi-row">
       <div class="kpi-card" onclick="showSection('overview')">
         <div class="kpi-label">总资产</div>
@@ -1045,7 +999,7 @@ li{margin-bottom:2px}
   <!-- =========================================== -->
   <!-- SECTION 2: 持仓明细 -->
   <!-- =========================================== -->
-  <div id="sec-holdings" style="display:none">
+  <div id="sec-holdings" data-pc-section="holdings" style="display:none">
     <div class="section-title">📋 全部持仓明细（15支）</div>
     <div class="card" style="margin-bottom:16px">
       <div class="table-wrap">
@@ -1091,7 +1045,33 @@ li{margin-bottom:2px}
   <!-- =========================================== -->
   <!-- SECTION 3: 再平衡 -->
   <!-- =========================================== -->
-  <div id="sec-rebalance" style="display:none">
+  <!-- ===== 投资风格切换器 ===== -->
+  <div class="style-bar">
+    <div class="label">🎯 投资风格</div>
+    <div class="style-switcher">
+      <button class="style-btn" data-style="conservative" onclick="switchStyle('conservative')">
+        <span class="style-dot" data-c="conservative"></span> 保守型
+      </button>
+      <button class="style-btn active" data-style="steady" onclick="switchStyle('steady')">
+        <span class="style-dot" data-c="steady"></span> 稳健型
+      </button>
+      <button class="style-btn" data-style="balanced" onclick="switchStyle('balanced')">
+        <span class="style-dot" data-c="balanced"></span> 平衡型
+      </button>
+      <button class="style-btn" data-style="aggressive" onclick="switchStyle('aggressive')">
+        <span class="style-dot" data-c="aggressive"></span> 进取型
+      </button>
+      <button class="style-btn" data-style="radical" onclick="switchStyle('radical')">
+        <span class="style-dot" data-c="radical"></span> 激进型
+      </button>
+    </div>
+    <div class="style-info">
+      <b id="styleName">稳健型</b><br>
+      <span id="styleDesc">年化5-7% · 波动10-13% · 适合长期退休储备</span>
+    </div>
+  </div>
+
+  <div id="sec-rebalance" data-pc-section="review" style="display:none">
     <div class="section-title">⚖️ 再平衡操作建议（<span id="rebalanceStyle">稳健型</span>）</div>
     <div class="card" style="margin-bottom:16px">
       <table>
@@ -1144,7 +1124,7 @@ li{margin-bottom:2px}
   <!-- =========================================== -->
   <!-- SECTION 4: 预估金额 -->
   <!-- =========================================== -->
-  <div id="sec-estimate" style="display:none">
+  <div id="sec-estimate" data-pc-section="review" style="display:none">
 
     <!-- ===== 🌙 纳指估值 · QDII夜盘预估 ===== -->
     <div class="card" style="margin-bottom:14px;border-left:4px solid #6366f1;background:linear-gradient(135deg,#fafbff,#f5f3ff)">
@@ -1271,7 +1251,7 @@ li{margin-bottom:2px}
   <!-- =========================================== -->
   <!-- SECTION 5: 目标进度 (NEW) -->
   <!-- =========================================== -->
-  <div id="sec-goal" style="display:none">
+  <div id="sec-goal" data-pc-section="goal" style="display:none">
     <div class="section-title">🎯 投资目标管理</div>
 
     <!-- 多目标切换栏 -->
@@ -1326,7 +1306,7 @@ li{margin-bottom:2px}
     <!-- 核心指标卡 -->
     <div class="grid-3" style="margin-bottom:16px">
       <div class="goal-metric suggest">
-        <div class="goal-metric-label">💡 建议月投入（按期达标）</div>
+        <div class="goal-metric-label">💡 月投入测算（按期达标）</div>
         <div class="goal-metric-val green" id="metricSuggest">¥2,980</div>
         <div class="goal-metric-sub" id="metricSuggestSub">按6%年化、28年内达到¥285万</div>
       </div>
@@ -1379,7 +1359,7 @@ li{margin-bottom:2px}
           <thead><tr><th>目标金额</th><th>年化收益</th><th>剩余年限</th><th>所需月投</th><th>累计投入</th></tr></thead>
           <tbody id="reverseBody"></tbody>
         </table>
-        <div class="tip-box">💡 如果建议月投超出承受能力，可考虑：降低目标金额、提高年化收益（调整投资风格）、延长投资期限。</div>
+        <div class="tip-box">💡 如果月投入测算值超出承受能力，可考虑：降低目标金额、提高年化收益假设（调整投资风格）、延长投资期限。</div>
       </div>
       <div class="card">
         <h2>⏰ 不同退休年龄对达标的影响</h2>
@@ -1391,7 +1371,7 @@ li{margin-bottom:2px}
   <!-- =========================================== -->
   <!-- SECTION 6: 加减仓记录 -->
   <!-- =========================================== -->
-  <div id="sec-trades" style="display:none">
+  <div id="sec-trades" data-pc-section="trades" style="display:none">
     <div class="section-title">📝 加减仓交易记录</div>
 
     <!-- 快速添加交易 -->
@@ -1456,7 +1436,7 @@ li{margin-bottom:2px}
   <!-- =========================================== -->
   <!-- SECTION 7: 投资计划 -->
   <!-- =========================================== -->
-  <div id="sec-plan" style="display:none">
+  <div id="sec-plan" data-pc-section="review" style="display:none">
     <div class="section-title">🎯 投资计划与节奏（<span id="planStyle">稳健型</span>）</div>
     <div class="card" style="margin-bottom:16px">
       <h2>📋 目标配置方案（32岁 · 退休储备）</h2>
@@ -1471,7 +1451,7 @@ li{margin-bottom:2px}
         <table>
           <tbody id="dcaBody"></tbody>
         </table>
-        <div class="tip-box">定投可有效平滑成本，适合32岁长期退休储备。建议设置自动扣款，避免情绪化操作。</div>
+        <div class="tip-box">定投可用于平滑成本，适合长期退休储备场景。是否设置自动扣款请结合现金流和风险承受能力自行决定。</div>
       </div>
       <div class="card">
         <h2>📊 年龄-风险动态调整路线图</h2>
@@ -1500,7 +1480,7 @@ li{margin-bottom:2px}
   <!-- =========================================== -->
   <!-- SECTION 8: 风格对比 -->
   <!-- =========================================== -->
-  <div id="sec-styles" style="display:none">
+  <div id="sec-styles" data-pc-section="review" style="display:none">
     <div class="section-title">🔀 五种投资风格对比</div>
     <div class="style-compare" id="styleCompare"></div>
 
@@ -1546,7 +1526,7 @@ li{margin-bottom:2px}
   <!-- =========================================== -->
   <!-- SECTION 9: 基金推荐池 -->
   <!-- =========================================== -->
-  <div id="sec-recommend" style="display:none">
+  <div id="sec-recommend" data-pc-section="review" style="display:none">
     <div class="recommend-intro">
       <h2>💡 基金推荐池 — 多因子选基模型</h2>
       <p>基于<strong>8维94因子选基体系</strong>（天相投顾/开源金工）+ <strong>晨星星级评价</strong>（MRAR风险调整后收益）+ <strong>多因子复合评分</strong>（板块优选/风格优选/指数增强FOF），从全市场公募基金中筛选优质标的。每支基金按6维评分：收益率(25%)、夏普比率(20%)、最大回撤(15%)、规模流动性(15%)、费率成本(15%)、晨星评级(10%)。</p>
@@ -1656,7 +1636,7 @@ li{margin-bottom:2px}
   <!-- =========================================== -->
   <!-- SECTION 10: AI 预测 -->
   <!-- =========================================== -->
-  <div id="sec-aipredict" style="display:none">
+  <div id="sec-aipredict" data-pc-section="review" style="display:none">
     <div class="ai-hero">
       <h2>🤖 AI 预测引擎 — 深度学习驱动的智能投研</h2>
       <p>融合 <strong>LSTM-Transformer 混合时序模型</strong>（多模态输入：价格序列+技术指标+新闻舆情+宏观因子）、<strong>XGBoost-DCN 多因子选基模型</strong>（3层堆叠集成+动态组合神经网络元模型）、<strong>孤立森林异常检测</strong>（市场风险预警）和<strong>贝叶斯置信区间</strong>（概率化预测），对持仓基金和市场趋势进行多维度 AI 预测。</p>
@@ -1866,7 +1846,97 @@ li{margin-bottom:2px}
 
   <div class="footer">
     ⚠️ <strong>免责声明：</strong>本仪表盘仅供参考，不构成投资建议。市场有风险，投资需谨慎。<br>
-    基金组合管理仪表盘 v7.1 ｜ 多账号系统 ｜ 多目标管理(localStorage持久化) ｜ AI投资顾问 ｜ 投资风格切换 ｜ 基金推荐池 ｜ AI预测 ｜ QDII净值来源日期
+    基金组合管理仪表盘 v7.1 ｜ 多账号系统 ｜ 多目标管理(localStorage持久化) ｜ 智能测算 ｜ 投资风格切换 ｜ 基金观察池 ｜ AI预测 ｜ QDII净值来源日期
+  </div>
+  <section id="sec-settings" data-pc-section="settings" style="display:none">
+    <div class="section-title">设置</div>
+    <div class="grid-2">
+      <div class="card">
+        <h2>账号与同步</h2>
+        <div class="current-acct-card" id="currentAcctCard" style="margin-bottom:12px">
+          <div class="current-acct-name" id="currentAcctName">京东金融</div>
+          <div class="current-acct-total" id="currentAcctTotal">¥10,920.20</div>
+          <div class="current-acct-meta">
+            <span class="cam-item green" id="camProfit">+¥736.90 (+7.23%)</span>
+            <span class="cam-item" id="camFunds">15支基金</span>
+            <span class="cam-item gray" id="camUpdate">更新于 刚刚</span>
+          </div>
+        </div>
+        <div class="account-switcher" style="margin-bottom:12px">
+          <div class="account-tabs" id="accountTabs">
+            <button class="acct-tab active" data-acct="0" onclick="switchAccount(0)">
+              <span class="acct-icon">🏦</span> 京东金融
+              <span class="acct-badge">15支</span>
+            </button>
+          </div>
+          <button class="acct-add-btn" onclick="showAddAccount()" title="添加账号">＋</button>
+        </div>
+        <div class="fund-row">
+          <span>当前账号</span>
+          <strong id="pcSettingsAccountName">京东金融</strong>
+        </div>
+        <div class="fund-row">
+          <span>同步状态</span>
+          <strong><span class="sync-status-badge" id="syncStatusBadge" data-status="local">本地保存</span></strong>
+        </div>
+        <div class="fund-row">
+          <span>移动端入口</span>
+          <a class="pc-mobile-link" href="mobile-dashboard.html">mobile-dashboard.html</a>
+        </div>
+      </div>
+      <div class="card">
+        <h2>数据与隐私</h2>
+        <div class="quick-actions" style="margin-top:0">
+          <button class="qa-btn" type="button" onclick="exportData()">导出</button>
+          <label class="qa-btn" style="cursor:pointer">导入<input type="file" accept=".json" style="display:none" onchange="importData(event)"></label>
+          <button class="qa-btn" type="button" onclick="openPrivacyDialog()">隐私说明</button>
+          <button class="qa-btn" type="button" onclick="clearAllUserData()">删除数据</button>
+          <button class="qa-btn" type="button" onclick="if(typeof appLogout==='function'){appLogout()}else if(typeof showToast==='function'){showToast('当前未登录', 'info')}">退出登录</button>
+        </div>
+      </div>
+    </div>
+  </section>
+    </main>
+
+    <aside class="pc-assist-panel">
+      <div class="pc-assist-card pc-goal-assist">
+        <h2>目标测算</h2>
+      <!-- 智能目标测算输入区 -->
+      <div class="ai-goal-section">
+        <div class="ai-goal-input-wrap">
+          <div class="ai-goal-label">
+            <span class="ai-glow"></span>
+            🧭 目标测算
+          </div>
+          <div class="ai-goal-row">
+            <textarea id="aiGoalInput" class="ai-goal-textarea"
+              placeholder="例如：我想在55岁退休时有500万资产，目前每月能投5千，风险偏好稳健..."
+              rows="2" oninput="onGoalInput()"></textarea>
+            <button class="ai-goal-btn" id="aiGoalBtn" onclick="generateAIAdvice()">
+              生成测算
+            </button>
+          </div>
+          <div style="font-size:11px;color:#64748b;margin-top:8px;line-height:1.6">测算结果仅用于目标规划和风险复核，不构成基金销售、投资顾问或买卖指令。</div>
+        </div>
+        <div class="ai-advice-output" id="aiAdviceOutput" style="display:none;">
+          <div class="ai-advice-header">
+            <span>🎯 目标测算结果</span>
+            <span class="ai-advice-tag" id="aiAdviceTag">基于您的目标估算</span>
+          </div>
+          <div class="ai-advice-body" id="aiAdviceBody"></div>
+        </div>
+      </div>
+
+      </div>
+      <div class="pc-assist-card">
+        <h2>风险复核</h2>
+        <div id="pcRiskSummary">查看复核页获取配置偏离、预估金额、风格对比、基金池和AI预测。</div>
+      </div>
+      <div class="pc-assist-card">
+        <h2>最近交易</h2>
+        <div id="pcRecentTrades">进入交易页查看和补充加减仓记录。</div>
+      </div>
+    </aside>
   </div>
 </div>
 
@@ -1909,6 +1979,145 @@ function showToast(message, type, duration){
     }, duration);
   }
   return toast;
+}
+
+function reportAppError(event, error, context){
+  try {
+    var payload = {
+      level: 'error',
+      event: event || 'client_error',
+      message: (error && (error.message || String(error))) || '',
+      path: location.pathname,
+      userAgent: navigator.userAgent,
+      timestamp: new Date().toISOString(),
+      context: context || {}
+    };
+    fetch('/api/client-log', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    }).catch(function(){});
+  } catch(e) {}
+}
+
+function setupClientMonitoring(){
+  window.addEventListener('error', function(event){
+    reportAppError('window_error', event.error || event.message, {
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno
+    });
+  });
+  window.addEventListener('unhandledrejection', function(event){
+    reportAppError('unhandled_rejection', event.reason || 'Unhandled promise rejection');
+  });
+}
+
+async function checkServiceHealth(){
+  try {
+    var res = await fetch('/api/health', { cache: 'no-store' });
+    if(!res.ok) throw new Error('health status ' + res.status);
+    return await res.json();
+  } catch(e) {
+    reportAppError('health_check_failed', e);
+    return { ok:false, error:e.message };
+  }
+}
+
+setupClientMonitoring();
+
+function openPrivacyDialog(){
+  var existing = document.getElementById('privacyDialog');
+  if(existing){ existing.style.display = 'flex'; return; }
+  var overlay = document.createElement('div');
+  overlay.id = 'privacyDialog';
+  overlay.className = 'acct-dialog-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.innerHTML =
+    '<div class="acct-dialog" style="width:min(620px,94vw);max-height:86vh;overflow:auto" onclick="event.stopPropagation()">' +
+      '<div class="acct-dialog-head"><div><h3>用户协议与隐私说明</h3><p>本工具用于个人基金组合记录、目标测算和风险复核。</p></div><button onclick="closePrivacyDialog()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#64748b">×</button></div>' +
+      '<ul class="privacy-list">' +
+        '<li>本仪表盘不是基金销售、投顾或交易服务，页面中的测算和评分仅供记录与自我复核。</li>' +
+        '<li>OCR 图片仅在浏览器本地识别，不上传到 Vercel OCR AI 服务，也不需要在 Vercel 部署 OCR AI Key。</li>' +
+        '<li>登录后，账号、目标、持仓和交易记录会按当前 Supabase 配置同步到云端；未登录或未配置时仅保存在本机浏览器。</li>' +
+        '<li>你可以随时导出备份，或点击“删除数据”清除当前本地数据并删除当前登录用户的云端业务数据。</li>' +
+        '<li>市场有风险，投资需谨慎；请结合自身财务状况独立判断。</li>' +
+      '</ul>' +
+      '<div style="display:flex;justify-content:flex-end;margin-top:18px"><button class="acct-dialog-btn acct-confirm" onclick="closePrivacyDialog()">我知道了</button></div>' +
+    '</div>';
+  overlay.addEventListener('click', closePrivacyDialog);
+  document.body.appendChild(overlay);
+}
+
+function closePrivacyDialog(){
+  var dialog = document.getElementById('privacyDialog');
+  if(dialog) dialog.style.display = 'none';
+}
+
+async function clearAllUserData(){
+  var ok = confirm('将删除当前浏览器本地数据；如果已登录，也会删除当前用户的云端账号、持仓、目标和交易记录。此操作不可撤销，确定继续？');
+  if(!ok) return;
+  try {
+    if(typeof setSyncStatus === 'function') setSyncStatus('syncing', '删除数据中...');
+    if(typeof isCloudWriteReady === 'function' && isCloudWriteReady()){
+      var cloudTrades = [];
+      accounts.forEach(function(a){ cloudTrades = cloudTrades.concat(a.tradesData || []); });
+      await Promise.all(cloudTrades.concat(trades || []).map(function(t){ return t && t._dbId ? dbDeleteTrade(t._dbId).catch(function(){}) : null; }));
+
+      var cloudFunds = [];
+      accounts.forEach(function(a){ cloudFunds = cloudFunds.concat(a.fundsData || []); });
+      await Promise.all(cloudFunds.concat(funds || []).map(function(f){ return f && f._dbId ? dbDeleteFund(f._dbId).catch(function(){}) : null; }));
+
+      await Promise.all(goals.map(function(g){ return g && g._dbId ? dbDeleteGoal(g._dbId).catch(function(){}) : null; }));
+      await Promise.all(accounts.map(function(a){ return a && a._dbId ? dbDeleteAccount(a._dbId).catch(function(){}) : null; }));
+    }
+
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('fund_trades');
+    for(var v = 1; v < STORAGE_VERSION; v++) localStorage.removeItem('fund_goals_v' + v);
+
+    funds = [];
+    trades = [];
+    goals = [createGoalFromTemplate('retirement', '退休储备')];
+    accounts = [{
+      id:0, name:'本地账号', icon:'🏦', platform:'local',
+      totalAsset:0, holdProfit:0, holdRate:0, fundCount:0, dataSource:'local',
+      lastUpdate:'已清空', investorName:'', age:32, riskLevel:'稳健型',
+      monthlyInvest:3000, targetAmount:2000000, fundsData:[], tradesData:[]
+    }];
+    currentAccountId = 0;
+    currentGoalId = 0;
+    totalAsset = 0;
+    saveGoals();
+    saveTradesData();
+    renderGoalTabs();
+    fillGoalInputs();
+    updateGoal();
+    renderHoldings();
+    renderRebalance();
+    renderEstimate();
+    renderTrades();
+    renderPlan();
+    renderStyleCompare();
+    renderFundPool();
+    renderAIPredictions();
+    updateKPIs();
+    updateAccountSummaryUI();
+    rebuildAccountTabsForLocal();
+    if(typeof setSyncStatus === 'function') setSyncStatus('local', '数据已清空');
+    showToast('已删除本地数据，并已请求删除云端业务数据', 'success', 4500);
+  } catch(e) {
+    if(typeof setSyncStatus === 'function') setSyncStatus('failed', '删除失败');
+    reportAppError('clear_user_data_failed', e);
+    showToast('删除数据失败：' + e.message, 'error', 5000);
+  }
+}
+
+function rebuildAccountTabsForLocal(){
+  var tabsEl = document.getElementById('accountTabs');
+  if(!tabsEl) return;
+  tabsEl.innerHTML = '<button class="acct-tab active" data-acct="0" onclick="switchAccount(0)"><span class="acct-icon">🏦</span> 本地账号<span class="acct-badge">0支</span></button>';
 }
 
 // ===== P2-5: localStorage 版本迁移 =====
@@ -2232,7 +2441,7 @@ function updateGoal(){
   document.getElementById('heroCurrent').textContent = '¥' + totalAsset.toFixed(0);
   document.getElementById('heroGap').textContent = '¥' + gapWan.toFixed(1) + '万';
 
-  // 建议月投
+  // 月投入测算
   const requiredMonthly = calcRequiredMonthly(totalAsset, targetYuan, goal.rate, yearsToRetire);
   document.getElementById('metricSuggest').textContent = '¥' + Math.ceil(requiredMonthly / 100) * 100;
   document.getElementById('metricSuggestSub').textContent = `按${(goal.rate*100).toFixed(1)}%年化、${yearsToRetire}年内达到¥${targetWan}万`;
@@ -3302,8 +3511,9 @@ function renderTrades(){
 // ===== 删除交易记录 =====
 function deleteTrade(index){
   if (!confirm('确定删除这条交易记录？')) return;
-  trades.splice(index, 1);
+  const removed = trades.splice(index, 1)[0];
   renderTrades();
+  syncDeletedTradeToCloud(removed);
   showToast('🗑️ 已删除交易记录', 'info');
 }
 
@@ -3334,15 +3544,17 @@ function addTrade(){
 
   if(!fund || !date || !amount){ showToast('⚠️ 请填写基金名称、日期和金额', 'error'); return; }
 
-  trades.unshift({
+  const trade = {
     date: date, fund: fund,
     type: action==='buy'?'买入':'卖出',
     action: action, ftype: ftype,
     amount: amount, share: share, nav: nav,
     status: '已确认', note: ''
-  });
+  };
+  trades.unshift(trade);
 
   renderTrades();
+  syncTradeToCloud(trade);
   // 清空表单
   ['tradeFundName','tradeDate','tradeAmount','tradeShare','tradeNav'].forEach(id => {document.getElementById(id).value = '';});
   document.getElementById('tradeFtype').value = 'mixed';
@@ -3577,7 +3789,7 @@ function updateCharts(){
 
 // ===== 导航切换 =====
 function showSection(name){
-  ['overview','holdings','rebalance','estimate','goal','trades','plan','styles','recommend','aipredict'].forEach(s=>{
+  ['overview','holdings','rebalance','estimate','goal','trades','plan','styles','recommend','aipredict','settings'].forEach(s=>{
     const el = document.getElementById('sec-'+s);
     if(el) el.style.display = s===name?'block':'none';
   });
@@ -3594,6 +3806,32 @@ function showSection(name){
   if(name==='aipredict'){
     setTimeout(()=>{ renderAIPredictions(); renderAIAlerts(); renderFeatureRanking(); }, 100);
   }
+  if(name==='settings'){
+    syncPcSettingsSummary();
+  }
+}
+
+function syncPcSettingsSummary(){
+  var accountName = document.getElementById('pcSettingsAccountName');
+  var currentName = document.getElementById('currentAcctName');
+  if(accountName && currentName) accountName.textContent = currentName.textContent || '当前账号';
+  var headerSync = document.getElementById('syncStatusBadge');
+  if(headerSync) headerSync.textContent = headerSync.textContent || '本地保存';
+}
+
+function showPcGroup(group){
+  document.querySelectorAll('[data-pc-nav]').forEach(function(btn){
+    btn.classList.toggle('active', btn.dataset.pcNav === group);
+  });
+  var firstSection = {
+    overview:'overview',
+    holdings:'holdings',
+    trades:'trades',
+    goal:'goal',
+    review:'rebalance',
+    settings:'settings'
+  }[group] || 'overview';
+  if(typeof showSection === 'function') showSection(firstSection);
 }
 
 // ===== 基金推荐池数据 =====
@@ -3850,7 +4088,7 @@ function renderTopByCategory(){
 function addFundToWatch(code){
   const f = fundPool.find(x => x.code === code);
   if(f){
-    showToast(`已将「${f.name}」加入观察清单\n\n下一步建议：\n1. 在京东金融/理财通搜索 ${f.code}\n2. 关注该基金近1周净值走势\n3. 等待再平衡时择机建仓`, 'success', 6000);
+    showToast(`已将「${f.name}」加入观察清单\n\n后续可自行复核：\n1. 在京东金融/理财通搜索 ${f.code}\n2. 关注该基金近1周净值走势\n3. 结合风险承受能力决定是否记录到组合`, 'success', 6000);
   }
 }
 
@@ -3951,7 +4189,7 @@ function createScoreDistChart(){
 // AI 预测数据 — 基于持仓15支基金的历史收益、波动率、与基准相关性计算
 // 预测逻辑：近期收益率 × LSTM趋势权重 + 波动率调整 + 贝叶斯置信区间
 const aiPredictions = [
-  {name:'华夏全球科技先锋混合(QDII)A', type:'混合型', amount:4033.41, weekR:+2.8, monthR:+5.2, quarterR:+8.5, conf:82, signal:'hold', reason:'近期涨幅较大，短期有回调压力，建议持有观望'},
+  {name:'华夏全球科技先锋混合(QDII)A', type:'混合型', amount:4033.41, weekR:+2.8, monthR:+5.2, quarterR:+8.5, conf:82, signal:'hold', reason:'近期涨幅较大，短期有回调压力，可作为持仓复核项'},
   {name:'华夏移动互联混合(QDII)', type:'混合型', amount:3209.67, weekR:+3.1, monthR:+5.8, quarterR:+9.2, conf:80, signal:'watch', reason:'动量强劲但RSI超买，关注止盈时机'},
   {name:'广发全球精选股票(QDII)A', type:'股票型', amount:1962.22, weekR:+2.2, monthR:+4.1, quarterR:+7.3, conf:75, signal:'hold', reason:'稳健上行趋势，维持持有'},
   {name:'南方纳斯达克100指数发起(QDII)A', type:'指数型', amount:504.24, weekR:+1.9, monthR:+3.5, quarterR:+6.2, conf:72, signal:'buy', reason:'收益率偏低(1.06%)，但纳指趋势向上，可逢低加仓'},
@@ -3962,19 +4200,19 @@ const aiPredictions = [
   {name:'易方达全球成长精选混合(QDII)C', type:'混合型', amount:61.57, weekR:+3.3, monthR:+6.2, quarterR:+9.8, conf:67, signal:'watch', reason:'与A类走势一致，C类适合短持'},
   {name:'招商纳斯达克100ETF发起式联接', type:'指数型', amount:50.35, weekR:+1.7, monthR:+3.1, quarterR:+5.5, conf:66, signal:'hold', reason:'仓位极小，影响有限，维持即可'},
   {name:'嘉实美国成长股票(QDII)-人民币', type:'股票型', amount:50.48, weekR:+2.0, monthR:+3.8, quarterR:+6.8, conf:64, signal:'hold', reason:'美国成长股估值偏高，持有但不宜加仓'},
-  {name:'永赢半导体产业智选混合发起C', type:'混合型', amount:6.83, weekR:+2.8, monthR:+5.5, quarterR:+8.8, conf:60, signal:'buy', reason:'半导体周期见底回升，国产替代催化，建议加仓'},
+  {name:'永赢半导体产业智选混合发起C', type:'混合型', amount:6.83, weekR:+2.8, monthR:+5.5, quarterR:+8.8, conf:60, signal:'buy', reason:'半导体周期见底回升，国产替代催化，作为低仓位观察项'},
   {name:'华夏国证半导体芯片ETF联接C', type:'指数型', amount:6.51, weekR:+2.5, monthR:+5.0, quarterR:+8.2, conf:62, signal:'buy', reason:'芯片ETF受益于AI算力需求，景气度上行'},
   {name:'广发远见智选混合C', type:'混合型', amount:7.29, weekR:+3.0, monthR:+5.8, quarterR:+9.2, conf:58, signal:'hold', reason:'仓位极小，持有观察'},
-  {name:'银华集成电路混合C', type:'混合型', amount:20.00, weekR:+2.6, monthR:+5.2, quarterR:+8.5, conf:55, signal:'watch', reason:'新建仓，数据不足，建议观察1-2周'}
+  {name:'银华集成电路混合C', type:'混合型', amount:20.00, weekR:+2.6, monthR:+5.2, quarterR:+8.5, conf:55, signal:'watch', reason:'新建仓，数据不足，可继续观察1-2周'}
 ];
 
 // AI 风险预警
 const aiAlerts = [
-  {level:'high', icon:'🔴', title:'组合集中度风险预警', desc:'15支基金100%为权益类(QDII+混合)，无债券/黄金对冲。AI模型检测到组合与纳斯达克指数相关性达0.89，单一市场风险集中。建议尽快执行再平衡，降低权益类至55-65%。', time:'模型检测时间：2026-06-23 15:30'},
-  {level:'mid', icon:'🟡', title:'RSI 超买信号', desc:'华夏移动互联、易方达全球成长A 近14日RSI分别为72.5和74.1，超过70超买阈值。LSTM模型预测短期回调概率58%，建议设置移动止盈线。', time:'模型检测时间：2026-06-23 收盘'},
-  {level:'mid', icon:'🟡', title:'QDII 汇率风险提示', desc:'美元兑人民币近期波动加大（6个月波动率5.2%）。XGBoost模型预测未来3个月汇率波动可能侵蚀QDII收益0.8-1.5%。汇率对冲工具不足时，建议适度分散至境内资产。', time:'模型检测时间：2026-06-23'},
-  {level:'low', icon:'🔵', title:'VIX 波动率处于低位', desc:'当前VIX=16.8，处于近1年30%分位。孤立森林模型检测到市场波动率有均值回归趋势，未来1个月波动率可能上升。建议保持5-10%现金仓位应对波动。', time:'模型检测时间：2026-06-23'},
-  {level:'low', icon:'🔵', title:'半导体验证期临近', desc:'永赢半导体、华夏芯片ETF等持仓受益于AI算力需求，但模型检测到半导体板块即将进入业绩验证期（7-8月），历史上验证期波动率为平时的1.8倍。建议小仓位参与。', time:'模型检测时间：2026-06-23'}
+  {level:'high', icon:'🔴', title:'组合集中度风险预警', desc:'15支基金100%为权益类(QDII+混合)，无债券/黄金对冲。AI模型检测到组合与纳斯达克指数相关性达0.89，单一市场风险集中，可重点复核再平衡偏离度。', time:'模型检测时间：2026-06-23 15:30'},
+  {level:'mid', icon:'🟡', title:'RSI 超买信号', desc:'华夏移动互联、易方达全球成长A 近14日RSI分别为72.5和74.1，超过70超买阈值。LSTM模型预测短期回调概率58%，可记录为止盈线复核项。', time:'模型检测时间：2026-06-23 收盘'},
+  {level:'mid', icon:'🟡', title:'QDII 汇率风险提示', desc:'美元兑人民币近期波动加大（6个月波动率5.2%）。XGBoost模型预测未来3个月汇率波动可能侵蚀QDII收益0.8-1.5%，可复核境内外资产集中度。', time:'模型检测时间：2026-06-23'},
+  {level:'low', icon:'🔵', title:'VIX 波动率处于低位', desc:'当前VIX=16.8，处于近1年30%分位。孤立森林模型检测到市场波动率有均值回归趋势，未来1个月波动率可能上升，可复核现金仓位承压能力。', time:'模型检测时间：2026-06-23'},
+  {level:'low', icon:'🔵', title:'半导体验证期临近', desc:'永赢半导体、华夏芯片ETF等持仓受益于AI算力需求，但模型检测到半导体板块即将进入业绩验证期（7-8月），历史上验证期波动率为平时的1.8倍，可作为小仓位风险复核项。', time:'模型检测时间：2026-06-23'}
 ];
 
 // 特征重要性排行 (SHAP值模拟)
@@ -4004,9 +4242,9 @@ function renderAIPredictions(){
     const quarterColor = f.quarterR>=0 ? '#16a34a' : '#dc2626';
     const confClass = f.conf>=75 ? 'ai-conf-high' : f.conf>=60 ? 'ai-conf-mid' : 'ai-conf-low';
     const signalMap = {
-      buy: {cls:'ai-signal-buy', text:'🟢 建议加仓'},
-      sell: {cls:'ai-signal-sell', text:'🔴 建议减仓'},
-      hold: {cls:'ai-signal-hold', text:'⚪ 建议持有'},
+      buy: {cls:'ai-signal-buy', text:'🟢 偏离较低'},
+      sell: {cls:'ai-signal-sell', text:'🔴 偏离较高'},
+      hold: {cls:'ai-signal-hold', text:'⚪ 持仓复核'},
       watch: {cls:'ai-signal-watch', text:'🟡 关注止盈'}
     };
     const sig = signalMap[f.signal];
@@ -4218,19 +4456,20 @@ function confirmAddAccount(){
 
   closeAddAccount();
   switchAccount(newId);
+  syncAccountToCloud(newAcct);
 }
 
-// ===== AI 投资建议引擎 =====
+// ===== 智能目标测算引擎 =====
 function onGoalInput(){
   const val = document.getElementById('aiGoalInput').value.trim();
   const btn = document.getElementById('aiGoalBtn');
-  btn.textContent = val.length > 5 ? '💡 获取建议' : '💡 获取建议';
+  btn.textContent = val.length > 5 ? '生成测算' : '生成测算';
 }
 
 function generateAIAdvice(){
   const input = document.getElementById('aiGoalInput').value.trim();
   if(!input){
-    showToast('请先输入您的投资目标或需求，AI才能给出定制建议 😊', 'warn', 3000);
+    showToast('请先输入您的投资目标或需求，系统才能生成测算', 'warn', 3000);
     return;
   }
 
@@ -4329,24 +4568,24 @@ function analyzeAndGenerateAdvice(text){
 
   // 2. 配置方案
   items.push({
-    title:'⚖️ 推荐资产配置',
-    detail:`权益类 <strong>${a.equity}%</strong>（美股QDII + A股基金）｜ 债券类 <strong>${a.bond}%</strong>（中短债/纯债）｜ 黄金/商品 <strong>${a.gold}%</strong>（黄金ETF）｜ 现金类 <strong>${a.cash}%</strong>（货币基金）。<span class="advice-highlight">您当前100%权益类集中度过高，建议逐步再平衡。</span>`
+    title:'⚖️ 资产配置测算',
+    detail:`权益类 <strong>${a.equity}%</strong>（美股QDII + A股基金）｜ 债券类 <strong>${a.bond}%</strong>（中短债/纯债）｜ 黄金/商品 <strong>${a.gold}%</strong>（黄金ETF）｜ 现金类 <strong>${a.cash}%</strong>（货币基金）。<span class="advice-highlight">当前权益类集中度较高，可作为再平衡复核项。</span>`
   });
 
   // 3. 定投方案
   items.push({
-    title:'📅 定投执行计划',
-    detail:`建议月定投 <strong>¥${monthlyInv.toLocaleString()}</strong>。${timeHorizon>0?`${timeHorizon}年后预计总额约 ¥${(fv/10000).toFixed(0)}万。`:''}${yearsToGoal<=timeHorizon?' ✅ 可在目标年限内达标':' ⚠️ 当前节奏下可能需要更长时间达标'}如需按时达标，建议月投提高至 <strong>¥${Math.ceil(requiredMonthly).toLocaleString()}</strong>。`
+    title:'📅 定投测算',
+    detail:`按月投入 <strong>¥${monthlyInv.toLocaleString()}</strong> 估算。${timeHorizon>0?`${timeHorizon}年后预计总额约 ¥${(fv/10000).toFixed(0)}万。`:''}${yearsToGoal<=timeHorizon?' ✅ 模拟结果可在目标年限内达标':' ⚠️ 当前节奏下模拟结果可能需要更长时间达标'}如需按时达标，月投入测算值约为 <strong>¥${Math.ceil(requiredMonthly).toLocaleString()}</strong>。`
   });
 
-  // 4. 具体操作建议
+  // 4. 模拟调整方案
   const sellAmt = Math.round(acctTotal*(a.equity-100)/100)*(-1);
   const bondAmt = Math.round(acctTotal*a.bond/100);
   const goldAmt = Math.round(acctTotal*a.gold/100);
   const cashAmt = Math.round(acctTotal*a.cash/100);
   items.push({
-    title:'🔧 立即行动建议',
-    detail:sellAmt>0?`卖出权益类 QDII 约 ¥${sellAmt.toLocaleString()}（优先赎回低收益率仓位），分别买入债券基金 ¥${bondAmt.toLocaleString()}、黄金ETF ¥${goldAmt.toLocaleString()}、货币基金 ¥${cashAmt.toLocaleString()}。分 2~3 批完成，每批间隔 1 周。`:'当前配置已接近目标比例，保持即可。建议每季度检查一次偏离度。'
+    title:'🔧 模拟调整方案',
+    detail:sellAmt>0?`若按目标比例做再平衡，权益类 QDII 需下调约 ¥${sellAmt.toLocaleString()}，债券基金、黄金ETF、货币基金的目标差额分别约为 ¥${bondAmt.toLocaleString()}、¥${goldAmt.toLocaleString()}、¥${cashAmt.toLocaleString()}。该结果仅用于复核配置偏离。`:'当前配置接近目标比例，可记录为低偏离状态并定期复核。'
   });
 
   // 5. 风险提示
@@ -4372,8 +4611,8 @@ function analyzeAndGenerateAdvice(text){
 
   // 7. 下一步
   items.push({
-    title:'🚀 建议下一步',
-    detail:`① 点击右上「🎯 设定目标」查看已自动创建的目标 → ② 查看「⚖️ 再平衡」获取具体操作清单 → ③ 查看「💡 基金推荐池」挑选适合的基金 → ④ 设置自动定投`
+    title:'🚀 下一步复核',
+    detail:`① 点击右上「🎯 设定目标」查看已自动创建的目标 → ② 查看「⚖️ 再平衡」复核偏离度 → ③ 查看「💡 基金观察池」记录候选基金 → ④ 依据个人情况自行决定是否调整`
   });
 
   const html = items.map(i=>`<div class="advice-item"><div class="advice-title">${i.title}</div><div class="advice-detail">${i.detail}</div></div>`).join('');
@@ -4673,36 +4912,12 @@ function processUploadedFiles(files){
         card.innerHTML =
           '<img src="' + base64 + '" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0" alt="截图预览">' +
           '<div style="flex:1"><div style="font-size:13px;font-weight:600;color:#1e293b">' + escapeHtml(fileName) + '</div>' +
-          '<div style="font-size:11px;color:#64748b">' + (fileSize/1024).toFixed(0) + ' KB ｜ <span class="ocr-status" style="color:#f59e0b">🤖 AI识别中...</span></div></div>' +
+          '<div style="font-size:11px;color:#64748b">' + (fileSize/1024).toFixed(0) + ' KB ｜ <span class="ocr-status" style="color:#f59e0b">本地OCR识别中...</span></div></div>' +
           '<span class="ocr-check" style="color:#f59e0b;font-size:18px">⏳</span>';
         preview.appendChild(card);
 
         callOCRApi(base64).then(function(result){
-          var statusEl = card.querySelector('.ocr-status');
-          var checkEl = card.querySelector('.ocr-check');
-          // AI 直接返回结构化交易记录，或 OCR 返回文字行
-          if(result.trades && result.trades.length > 0){
-            result.trades.forEach(function(t){ trades.unshift(t); });
-            renderTrades();
-            statusEl.textContent = 'AI识别完成 · 导入' + result.trades.length + '条记录';
-            statusEl.style.color = '#16a34a'; checkEl.textContent = '✓'; checkEl.style.color='#22c55e';
-            showToast('✅ AI 识别成功，已导入 ' + result.trades.length + ' 条交易记录', 'success');
-          } else if(result.texts && result.texts.length > 0){
-            var parsed = parseTradeText(result.texts);
-            statusEl.textContent = 'OCR完成 · ' + result.texts.length + '行 · 识别' + parsed.length + '条';
-            statusEl.style.color = '#16a34a'; checkEl.textContent = '✓'; checkEl.style.color='#22c55e';
-            if(parsed.length > 0){
-              parsed.forEach(function(t){ trades.unshift(t); });
-              renderTrades();
-              showToast('✅ 识别成功，已导入 ' + parsed.length + ' 条记录', 'success');
-            } else {
-              showToast('⚠️ 未识别到交易记录格式，请手动填写', 'warn');
-            }
-          } else {
-            statusEl.textContent = '未识别到记录 · 请手动填写';
-            statusEl.style.color = '#f59e0b'; checkEl.textContent = '?'; checkEl.style.color='#f59e0b';
-            showToast('⚠️ 未识别到交易记录，请手动填写', 'warn');
-          }
+          showOcrReviewDialog(result, card);
         }).catch(function(err){
           var statusEl = card.querySelector('.ocr-status');
           var checkEl = card.querySelector('.ocr-check');
@@ -4715,16 +4930,239 @@ function processUploadedFiles(files){
   }
 }
 
-async function callOCRApi(base64){
-  // 使用 AI Vision API 识别基金截图，直接返回结构化交易记录
-  var res = await fetch('/api/ocr', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ image: base64 })
+function showOcrReviewDialog(result, card){
+  var statusEl = card ? card.querySelector('.ocr-status') : null;
+  var checkEl = card ? card.querySelector('.ocr-check') : null;
+  var parsedTrades = result.trades || [];
+  if((!parsedTrades || parsedTrades.length === 0) && result.texts && result.texts.length > 0){
+    parsedTrades = parseTradeText(result.texts);
+  }
+  var parsedFunds = result.funds || [];
+
+  if(parsedFunds.length === 0 && parsedTrades.length === 0){
+    if(statusEl){ statusEl.textContent = '未识别到记录 · 请手动填写'; statusEl.style.color = '#f59e0b'; }
+    if(checkEl){ checkEl.textContent = '?'; checkEl.style.color = '#f59e0b'; }
+    showToast('⚠️ 未识别到可导入记录，请手动填写', 'warn');
+    return;
+  }
+
+  if(statusEl){ statusEl.textContent = '待确认 · ' + parsedFunds.length + '支基金 / ' + parsedTrades.length + '条交易'; statusEl.style.color = '#2563eb'; }
+  if(checkEl){ checkEl.textContent = '!'; checkEl.style.color = '#2563eb'; }
+
+  var overlay = document.createElement('div');
+  overlay.id = 'ocrReviewDialog';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML =
+    '<div class="acct-dialog" style="width:min(920px,96vw);max-height:86vh;overflow:auto" onclick="event.stopPropagation()">' +
+      '<div class="acct-dialog-head"><div><h3>确认 OCR 识别结果</h3><p>识别可能有误，请核对后再导入当前账号。</p></div><button onclick="closeOcrReviewDialog()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#64748b">×</button></div>' +
+      '<div class="info-box" style="margin-bottom:14px">图片未上传到 Vercel AI 接口，当前使用浏览器本地 OCR。请重点核对基金名称、代码、金额和份额。</div>' +
+      renderOcrFundsReview(parsedFunds) +
+      renderOcrTradesReview(parsedTrades) +
+      '<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px">' +
+        '<button class="acct-dialog-btn acct-cancel" onclick="closeOcrReviewDialog()">取消</button>' +
+        '<button class="acct-dialog-btn acct-confirm" onclick="confirmOcrImport()">确认导入</button>' +
+      '</div>' +
+    '</div>';
+  overlay.__ocrResult = { funds: parsedFunds, trades: parsedTrades, card: card };
+  overlay.addEventListener('click', closeOcrReviewDialog);
+  document.body.appendChild(overlay);
+}
+
+function renderOcrFundsReview(fundsList){
+  if(!fundsList || fundsList.length === 0) return '<div class="info-box" style="margin-bottom:12px">未识别到持仓基金。</div>';
+  return '<div class="table-wrap" style="margin-bottom:14px"><table><thead><tr><th>基金名称</th><th>代码</th><th>金额</th><th>份额</th><th>持有收益</th></tr></thead><tbody>' +
+    fundsList.map(function(f,i){
+      return '<tr>' +
+        '<td><input class="form-input" data-ocr-fund="' + i + '" data-field="name" value="' + escapeHtml(f.name || '') + '" style="width:100%;padding:6px"></td>' +
+        '<td><input class="form-input" data-ocr-fund="' + i + '" data-field="code" value="' + escapeHtml(f.code || '') + '" style="width:90px;padding:6px"></td>' +
+        '<td><input class="form-input" data-ocr-fund="' + i + '" data-field="amount" value="' + (f.amount || 0) + '" style="width:100px;padding:6px"></td>' +
+        '<td><input class="form-input" data-ocr-fund="' + i + '" data-field="share" value="' + (f.share || 0) + '" style="width:100px;padding:6px"></td>' +
+        '<td><input class="form-input" data-ocr-fund="' + i + '" data-field="hold" value="' + (f.hold || 0) + '" style="width:100px;padding:6px"></td>' +
+      '</tr>';
+    }).join('') +
+    '</tbody></table></div>';
+}
+
+function renderOcrTradesReview(tradesList){
+  if(!tradesList || tradesList.length === 0) return '<div class="info-box" style="margin-bottom:12px">未识别到交易记录。</div>';
+  return '<div class="table-wrap"><table><thead><tr><th>日期</th><th>基金名称</th><th>动作</th><th>金额</th><th>份额</th></tr></thead><tbody>' +
+    tradesList.map(function(t,i){
+      return '<tr>' +
+        '<td><input class="form-input" data-ocr-trade="' + i + '" data-field="date" value="' + escapeHtml(t.date || '') + '" style="width:110px;padding:6px"></td>' +
+        '<td><input class="form-input" data-ocr-trade="' + i + '" data-field="fund" value="' + escapeHtml(t.fund || '') + '" style="width:100%;padding:6px"></td>' +
+        '<td><select data-ocr-trade="' + i + '" data-field="action" style="padding:6px;border:1px solid #e2e8f0;border-radius:8px"><option value="buy" ' + (t.action === 'buy' ? 'selected' : '') + '>买入</option><option value="sell" ' + (t.action === 'sell' ? 'selected' : '') + '>卖出</option></select></td>' +
+        '<td><input class="form-input" data-ocr-trade="' + i + '" data-field="amount" value="' + (t.amount || 0) + '" style="width:100px;padding:6px"></td>' +
+        '<td><input class="form-input" data-ocr-trade="' + i + '" data-field="share" value="' + (t.share || 0) + '" style="width:100px;padding:6px"></td>' +
+      '</tr>';
+    }).join('') +
+    '</tbody></table></div>';
+}
+
+function closeOcrReviewDialog(){
+  var dialog = document.getElementById('ocrReviewDialog');
+  if(dialog) dialog.remove();
+}
+
+function confirmOcrImport(){
+  var dialog = document.getElementById('ocrReviewDialog');
+  if(!dialog || !dialog.__ocrResult) return;
+  var result = dialog.__ocrResult;
+  var parsedFunds = [];
+  var parsedTrades = [];
+
+  (result.funds || []).forEach(function(f,i){
+    var next = Object.assign({}, f);
+    dialog.querySelectorAll('[data-ocr-fund="' + i + '"]').forEach(function(input){
+      var field = input.dataset.field;
+      next[field] = ['amount','share','hold'].includes(field) ? toNumber(input.value) : input.value.trim();
+    });
+    if(next.name && next.amount > 0) parsedFunds.push(next);
   });
-  var data = await res.json();
-  if(data.error) throw new Error(data.error);
-  // 返回 { trades: [...], count: N } 或 { texts: [...], count: N }
-  return { trades: data.trades || [], texts: data.texts || [], count: data.count || 0 };
+
+  (result.trades || []).forEach(function(t,i){
+    var next = Object.assign({}, t);
+    dialog.querySelectorAll('[data-ocr-trade="' + i + '"]').forEach(function(input){
+      var field = input.dataset.field;
+      next[field] = ['amount','share','nav'].includes(field) ? toNumber(input.value) : input.value.trim();
+    });
+    next.type = next.action === 'sell' ? '卖出' : '买入';
+    if(next.fund && next.amount > 0) parsedTrades.push(next);
+  });
+
+  var importedFunds = parsedFunds.length > 0 ? importOcrFunds(parsedFunds) : 0;
+  parsedTrades.forEach(function(t){
+    trades.unshift(t);
+    syncTradeToCloud(t);
+  });
+  if(parsedTrades.length > 0) renderTrades();
+  if(importedFunds > 0 || parsedTrades.length > 0) refreshAfterOcrImport();
+
+  var statusEl = result.card ? result.card.querySelector('.ocr-status') : null;
+  var checkEl = result.card ? result.card.querySelector('.ocr-check') : null;
+  if(statusEl){ statusEl.textContent = '已导入 · ' + importedFunds + '支基金 / ' + parsedTrades.length + '条交易'; statusEl.style.color = '#16a34a'; }
+  if(checkEl){ checkEl.textContent = '✓'; checkEl.style.color = '#22c55e'; }
+
+  closeOcrReviewDialog();
+  showToast('✅ 已确认导入 ' + importedFunds + ' 支基金、' + parsedTrades.length + ' 条交易', 'success');
+}
+
+function importOcrFunds(ocrFunds){
+  var normalized = (ocrFunds || []).map(normalizeOcrFund).filter(function(f){ return f.name && f.amount > 0; });
+  if(normalized.length === 0) return 0;
+
+  var byKey = {};
+  funds.forEach(function(f, idx){
+    byKey[(f.code || f.name || '').trim()] = idx;
+  });
+
+  var mergedFunds = [];
+  normalized.forEach(function(f){
+    var key = (f.code || f.name || '').trim();
+    if(key && byKey[key] !== undefined){
+      funds[byKey[key]] = Object.assign({}, funds[byKey[key]], f);
+      mergedFunds.push(funds[byKey[key]]);
+    } else {
+      funds.push(f);
+      mergedFunds.push(funds[funds.length - 1]);
+      if(key) byKey[key] = funds.length - 1;
+    }
+  });
+  syncCurrentAccountFromRuntime();
+  syncOcrFundsToCloud(mergedFunds);
+  return normalized.length;
+}
+
+function normalizeOcrFund(f){
+  var amount = toNumber(f.amount);
+  var hold = toNumber(f.hold);
+  var rate = toNumber(f.rate);
+  return {
+    name: String(f.name || '').trim(),
+    code: String(f.code || '').trim(),
+    type: ['mixed','index','stock'].includes(f.type) ? f.type : inferFundTypeFromName(f.name || ''),
+    market: f.market === 'cn' ? 'cn' : inferMarketFromName(f.name || ''),
+    ref: f.ref || inferRefFromName(f.name || ''),
+    amount: amount,
+    share: toNumber(f.share),
+    cost: toNumber(f.cost),
+    nav: toNumber(f.nav),
+    navDate: f.navDate || f.nav_date || '',
+    navLag: f.navLag || f.nav_lag || (inferMarketFromName(f.name || '') === 'us' ? 'T+1' : 'T+0'),
+    navStatus: f.navStatus || f.nav_status || 'OCR导入',
+    estChange: toNumber(f.estChange || f.est_change),
+    yesterday: toNumber(f.yesterday),
+    hold: hold,
+    rate: rate
+  };
+}
+
+function syncCurrentAccountFromRuntime(){
+  var acct = accounts[currentAccountId];
+  if(!acct) return;
+  var total = funds.reduce(function(s,f){ return s + (toNumber(f.amount) || 0); }, 0);
+  var holdProfit = funds.reduce(function(s,f){ return s + (toNumber(f.hold) || 0); }, 0);
+  acct.fundsData = funds;
+  acct.tradesData = trades;
+  acct.totalAsset = total;
+  acct.holdProfit = holdProfit;
+  acct.holdRate = total > holdProfit && total > 0 ? holdProfit / (total - holdProfit) * 100 : 0;
+  acct.fundCount = funds.length;
+  acct.lastUpdate = 'OCR导入';
+  totalAsset = total;
+}
+
+function refreshAfterOcrImport(){
+  syncCurrentAccountFromRuntime();
+  renderHoldings();
+  renderRebalance();
+  renderEstimate();
+  renderTrades();
+  renderPlan();
+  renderStyleCompare();
+  renderAIPredictions();
+  updateKPIs();
+  updateAccountSummaryUI();
+}
+
+function updateAccountSummaryUI(){
+  var acct = accounts[currentAccountId];
+  if(!acct) return;
+  var nameEl = document.getElementById('currentAcctName');
+  var totalEl = document.getElementById('currentAcctTotal');
+  var profitEl = document.getElementById('camProfit');
+  var fundsEl = document.getElementById('camFunds');
+  var updateEl = document.getElementById('camUpdate');
+  if(nameEl) nameEl.textContent = acct.name;
+  if(totalEl) totalEl.textContent = '¥' + acct.totalAsset.toLocaleString('zh-CN', {minimumFractionDigits:2});
+  if(profitEl){
+    var sign = acct.holdProfit >= 0 ? '+' : '';
+    profitEl.innerHTML = '<span class="' + (acct.holdProfit >= 0 ? 'green' : '') + '">' + sign + '¥' + Math.abs(acct.holdProfit).toFixed(2) + ' (' + sign + acct.holdRate.toFixed(2) + '%)</span>';
+  }
+  if(fundsEl) fundsEl.textContent = acct.fundCount + '支基金';
+  if(updateEl) updateEl.textContent = '更新于 ' + acct.lastUpdate;
+}
+
+function toNumber(value){
+  var n = parseFloat(String(value || 0).replace(/[¥￥,元份%+]/g, ''));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function inferFundTypeFromName(name){
+  if(/指数|ETF|联接|纳斯达克|标普|沪深|中证|国证/.test(name)) return 'index';
+  if(/股票/.test(name)) return 'stock';
+  return 'mixed';
+}
+
+function inferMarketFromName(name){
+  return /QDII|全球|美国|纳斯达克|标普|新兴市场/.test(name) ? 'us' : 'cn';
+}
+
+function inferRefFromName(name){
+  if(/纳斯达克|纳指/.test(name)) return '纳斯达克100';
+  if(/标普|美国成长/.test(name)) return '标普500';
+  if(/半导体|芯片|集成电路/.test(name)) return '中华半导体芯片';
+  if(/新兴市场/.test(name)) return 'MSCI新兴市场';
+  return '';
 }
 
 // 从OCR文本中提取交易记录
@@ -4769,7 +5207,9 @@ function exportData(){
           id:a.id, name:a.name, icon:a.icon, platform:a.platform,
           totalAsset:a.totalAsset, holdProfit:a.holdProfit, holdRate:a.holdRate,
           fundCount:a.fundCount, investorName:a.investorName, age:a.age,
-          riskLevel:a.riskLevel, monthlyInvest:a.monthlyInvest, targetAmount:a.targetAmount
+          riskLevel:a.riskLevel, monthlyInvest:a.monthlyInvest, targetAmount:a.targetAmount,
+          fundsData:a.fundsData || [],
+          tradesData:a.tradesData || []
         };
       }),
       currentStyle: currentStyle,
@@ -4807,6 +5247,8 @@ function importData(event){
           var existing = accounts.find(function(x){ return x.id === a.id; });
           if(existing){
             Object.assign(existing, a);
+          } else {
+            accounts.push(a);
           }
         });
       }
@@ -4818,6 +5260,7 @@ function importData(event){
       renderRebalance();
       renderPlan();
       renderStyleCompare();
+      syncImportedDataToCloud();
       showToast('数据导入成功！已恢复 ' + goals.length + ' 个目标', 'success', 3500);
     } catch(err){
       showToast('导入失败: ' + err.message, 'error', 4000);
@@ -4826,6 +5269,7 @@ function importData(event){
   reader.readAsText(file);
   event.target.value = ''; // reset for re-import
 }
+
 </script>
 
 <!-- ===== Supabase 后端脚本 ===== -->
@@ -4834,6 +5278,8 @@ function importData(event){
 <script src="src/auth.js"></script>
 <script src="src/data-layer.js"></script>
 <script src="src/realtime.js"></script>
+<script src="src/ocr-client.js"></script>
+<script src="src/sync.js"></script>
 <script>
 // 登录后显示退出按钮
 function showLogoutBtn(){

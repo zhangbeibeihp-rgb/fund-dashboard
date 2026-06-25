@@ -19,6 +19,7 @@ async function appInit() {
   // 1. 检查 Supabase 是否配置
   if (!isSupabaseConfigured()) {
     console.log('[App] Supabase 未配置，使用 localStorage 模式');
+    if (typeof setSyncStatus === 'function') setSyncStatus('local', '本地保存');
     return;
   }
 
@@ -26,6 +27,7 @@ async function appInit() {
   const client = await initSupabase();
   if (!client) {
     console.warn('[App] Supabase 初始化失败，降级到 localStorage 模式');
+    if (typeof setSyncStatus === 'function') setSyncStatus('failed', '云端连接失败');
     return;
   }
 
@@ -34,6 +36,7 @@ async function appInit() {
   if (!user) return;  // 已跳转到 login.html
   __appUser = user;
   __supabaseReady = true;
+  if (typeof setSyncStatus === 'function') setSyncStatus('syncing', '云端加载中...');
 
   console.log('[App] 用户已认证:', user.email);
 
@@ -67,6 +70,7 @@ async function appInit() {
 
     // 10. 设置实时同步
     setupRealtimeSync();
+    if (typeof setSyncStatus === 'function') setSyncStatus('synced', '云端已同步');
 
     // 11. 自动获取夜盘美股指数（后台静默执行）
     setTimeout(() => {
@@ -76,6 +80,7 @@ async function appInit() {
     console.log('[App] 云端模式启动完成');
   } catch (e) {
     console.error('[App] 数据加载失败:', e);
+    if (typeof setSyncStatus === 'function') setSyncStatus('failed', '同步失败');
     showToast('数据同步失败: ' + e.message, 'error');
   } finally {
     hideLoadingOverlay();

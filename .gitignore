@@ -19,3 +19,10 @@ Desktop.ini
 # Env
 .env
 .env.local
+.env.*
+!.env.example
+*.pem
+*.key
+*.secret
+secrets/
+local-secrets/

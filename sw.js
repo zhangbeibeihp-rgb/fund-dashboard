@@ -3,7 +3,7 @@
 // 策略：Cache First（核心资源）+ Network First（API请求）
 // ============================================================
 
-const CACHE_NAME = 'fund-dashboard-v1.3';
+const CACHE_NAME = 'fund-dashboard-v1.4';
 const STATIC_ASSETS = [
   './',
   './portfolio-rebalance-dashboard.html',
@@ -15,8 +15,8 @@ const STATIC_ASSETS = [
   './src/data-layer.js',
   './src/realtime.js',
   './src/app-init.js',
-  './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-192.svg',
+  './icons/icon-512.svg'
 ];
 
 // CDN 资源（尝试缓存，失败不影响安装）

@@ -1,7 +1,7 @@
 {
   "name": "基金组合管理仪表盘",
   "short_name": "基金仪表盘",
-  "description": "个人基金投资组合管理 - 多账号、多目标、AI投资顾问",
+  "description": "个人基金投资组合管理 - 多账号、多目标、智能测算",
   "start_url": "./portfolio-rebalance-dashboard.html",
   "display": "standalone",
   "orientation": "portrait-primary",
