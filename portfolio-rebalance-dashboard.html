@@ -2546,18 +2546,15 @@ function getPortfolioBaseTotal(){
 }
 
 function getFundDisplayAmount(fund){
-  var liveAmount = Number(fund && fund.liveAmount);
-  return Number.isFinite(liveAmount) ? liveAmount : (Number(fund && fund.amount) || 0);
+  return Number(fund && fund.amount) || 0;
 }
 
 function getFundDisplayYesterday(fund){
-  var liveYesterday = Number(fund && fund.liveYesterday);
-  return Number.isFinite(liveYesterday) ? liveYesterday : (Number(fund && fund.yesterday) || 0);
+  return Number(fund && fund.yesterday) || 0;
 }
 
 function getFundDisplayRate(fund){
-  var liveRate = Number(fund && fund.liveRate);
-  return Number.isFinite(liveRate) ? liveRate : (Number(fund && fund.rate) || 0);
+  return Number(fund && fund.rate) || 0;
 }
 
 function getFundPrincipalAmount(fund){
@@ -2653,15 +2650,14 @@ function applyMarketEstimatesToOverview(estimates){
     applied++;
   });
   if(applied > 0){
-    syncCurrentAccountMarketSummary();
-    refreshOverviewFromFunds();
+    // 夜盘预估仅更新基金 live* 属性（供预估模块使用），不联动主界面
+    return true;
   }
   return applied > 0;
 }
 
-// ===== P1-2: KPI 卡片动态更新 =====
+// ===== P1-2: KPI 卡片动态更新（仅使用已确认数据）=====
 function updateKPIs(){
-  // 从 funds 数组动态计算，实时估算优先，静态持仓兜底
   var total = funds.reduce(function(s,f){ return s + getFundDisplayAmount(f); }, 0);
   var yesterdayProfit = funds.reduce(function(s,f){ return s + getFundDisplayYesterday(f); }, 0);
   var principalBase = getPortfolioPrincipalBase();
@@ -2670,9 +2666,6 @@ function updateKPIs(){
   var holdPct = principalBase > 0 ? (holdProfit / principalBase * 100) : 0;
   totalAsset = total;
 
-  // P2: 计算已确认的昨日收益（不含实时估算）
-  var confirmedYesterday = funds.reduce(function(s,f){ return s + (Number(f.yesterday) || 0); }, 0);
-  var hasLiveData = funds.some(function(f){ return typeof f.liveYesterday === 'number' && Number.isFinite(f.liveYesterday); });
   var confirmedDataStale = isConfirmedDataStale();
   var latestConfirmedDate = getLatestConfirmedNavDate();
 
@@ -2684,16 +2677,9 @@ function updateKPIs(){
     el.className = 'kpi-value ' + (yesterdayProfit >= 0 ? 'red' : 'green');
   }
   if((el = document.getElementById('kpiYesterdayPct'))){
-    if(confirmedDataStale && !hasLiveData){
+    if(confirmedDataStale){
       el.textContent = latestConfirmedDate ? ('上次披露 ' + latestConfirmedDate) : '等待最新净值';
       el.className = 'kpi-sub';
-    }
-    // P2: 如果有实时估算数据，显示对比
-    else if(hasLiveData && Math.abs(yesterdayProfit - confirmedYesterday) > 0.01){
-      var diffEst = yesterdayProfit - confirmedYesterday;
-      var diffSign = diffEst >= 0 ? '+' : '';
-      el.innerHTML = '<span class="' + (yesterdayPct >= 0 ? 'red' : 'green') + '">' + (yesterdayPct >= 0 ? '+' : '') + yesterdayPct.toFixed(2) + '%</span>'
-        + '<span style="font-size:10px;color:#a855f7;margin-left:6px">⚡估算 ' + diffSign + formatYuan(diffEst, 2) + '</span>';
     } else {
       el.textContent = (yesterdayPct >= 0 ? '+' : '') + yesterdayPct.toFixed(2) + '%';
       el.className = 'kpi-sub ' + (yesterdayPct >= 0 ? 'red' : 'green');
@@ -2707,37 +2693,21 @@ function updateKPIs(){
     el.textContent = (holdPct >= 0 ? '+' : '') + holdPct.toFixed(2) + '%';
     el.className = 'kpi-sub ' + (holdPct >= 0 ? 'green' : 'red');
   }
-  // 累计收益 = 持有收益 + 已实现收益（从 trades 计算）
   var realizedProfit = trades.filter(function(t){ return t.type === '赎回'; }).reduce(function(s,t){ return s + (t.profit || 0); }, 0);
   var totalProfit = holdProfit + realizedProfit;
   if((el = document.getElementById('kpiTotalProfit'))) el.textContent = (totalProfit >= 0 ? '+' : '-') + formatYuan(Math.abs(totalProfit), 2);
-  // 已披露收益
   if((el = document.getElementById('kpiEstProfit'))){
     el.textContent = (yesterdayProfit >= 0 ? '+' : '-') + formatYuan(Math.abs(yesterdayProfit), 2);
     el.className = 'kpi-value ' + (yesterdayProfit >= 0 ? 'red' : 'green');
   }
-  if(confirmedDataStale && !hasLiveData){
-    if((el = document.getElementById('kpiStatusYesterday'))) el.textContent = '待更新';
-    if((el = document.getElementById('kpiStatusTotal'))) el.textContent = '待校准';
-    if((el = document.getElementById('kpiStatusHold'))) el.textContent = '待校准';
-    if((el = document.getElementById('kpiStatusTotalProfit'))) el.textContent = '待校准';
-  }
-  if(hasLiveData){
-    if((el = document.getElementById('kpiStatusTotal'))) el.textContent = '估算中 ⚡';
-    if((el = document.getElementById('kpiStatusYesterday'))) el.textContent = '估算中 ⚡';
-    if((el = document.getElementById('kpiStatusHold'))) el.textContent = '估算中 ⚡';
-    if((el = document.getElementById('kpiStatusTotalProfit'))) el.textContent = '估算中 ⚡';
-  }
 
-  // P2: 如果有实时估算，更新总资产 KPI 的对比提示
-  if((el = document.getElementById('kpiTotalSub')) && hasLiveData){
-    var estTotal = funds.reduce(function(s,f){
-      var liveAmount = Number(f && f.liveAmount);
-      return s + (Number.isFinite(liveAmount) ? liveAmount : (Number(f.amount) || 0));
-    }, 0);
-    if(Math.abs(estTotal - total) > 0.5){
-      el.innerHTML += ' <span style="font-size:10px;color:#a855f7">⚡预估¥' + estTotal.toFixed(0) + '</span>';
-    }
+  // 净值陈旧提示
+  if(confirmedDataStale){
+    var staleText = '待更新';
+    if((el = document.getElementById('kpiStatusYesterday'))) el.textContent = staleText;
+    if((el = document.getElementById('kpiStatusTotal'))) el.textContent = staleText;
+    if((el = document.getElementById('kpiStatusHold'))) el.textContent = staleText;
+    if((el = document.getElementById('kpiStatusTotalProfit'))) el.textContent = staleText;
   }
 }
 
