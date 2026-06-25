@@ -882,15 +882,28 @@ li{margin-bottom:2px}
 .pc-side-nav button{min-height:40px;border:0;border-radius:7px;background:transparent;text-align:left;color:#475569;font-weight:700;padding:0 12px;cursor:pointer}
 .pc-side-nav button.active,.pc-side-nav button:hover{background:#eff6ff;color:#2563eb}
 .pc-main-content{min-width:0}
+.pc-main-content .kpi-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pc-main-content .kpi-card{border-radius:8px;padding:14px 16px;box-shadow:0 1px 8px rgba(15,23,42,.06)}
+.pc-main-content .kpi-value{font-size:19px}
+.pc-main-content .top3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pc-main-content .top3-item{border-radius:8px;box-shadow:0 1px 8px rgba(15,23,42,.06)}
 .pc-assist-panel{position:sticky;top:84px;display:grid;gap:12px}
 .pc-assist-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:14px}
 .pc-assist-card h2{font-size:14px;margin:0 0 10px;color:#0f172a}
 .pc-assist-card div{font-size:12px;color:#64748b;line-height:1.7}
 .pc-mobile-link{display:inline-flex;align-items:center;min-height:34px;padding:0 10px;border-radius:7px;background:#eff6ff;color:#2563eb;font-weight:700;text-decoration:none;white-space:nowrap}
+@media(max-width:1280px){
+  .pc-workspace-shell{grid-template-columns:200px minmax(0,1fr)}
+  .pc-assist-panel{grid-column:2;position:static;grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 @media(max-width:1100px){
   .pc-topbar{position:static;align-items:flex-start;flex-direction:column}
   .pc-workspace-shell{display:block}
   .pc-side-nav,.pc-assist-panel{position:static;margin-bottom:12px}
+  .pc-main-content .kpi-row,.pc-main-content .top3{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .pc-main-content .kpi-row,.pc-main-content .top3,.pc-assist-panel{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -955,7 +968,7 @@ li{margin-bottom:2px}
     </div>
 
     <div class="section-title">🏆 昨日收益 Top 3</div>
-    <div class="top3">
+    <div class="top3" id="top3List">
       <div class="top3-item">
         <div class="top3-name">华夏移动互联混合(QDII)</div>
         <div class="top3-val">+¥131.40</div>
@@ -1952,6 +1965,16 @@ function escapeHtml(str){
     .replace(/'/g,'&#39;');
 }
 
+function formatYuan(value, digits){
+  var n = Number(value);
+  if(!Number.isFinite(n)) n = 0;
+  var fractionDigits = digits == null ? 2 : digits;
+  return '¥' + n.toLocaleString('zh-CN', {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits
+  });
+}
+
 // ===== P1-4: Toast 通知组件 =====
 function showToast(message, type, duration){
   type = type || 'info';
@@ -2103,6 +2126,7 @@ async function clearAllUserData(){
     renderFundPool();
     renderAIPredictions();
     updateKPIs();
+    renderTop3();
     updateAccountSummaryUI();
     rebuildAccountTabsForLocal();
     if(typeof setSyncStatus === 'function') setSyncStatus('local', '数据已清空');
@@ -2482,20 +2506,108 @@ function updateGoal(){
   updateScenarioChart();
 }
 
+function getPortfolioBaseTotal(){
+  return funds.reduce(function(s,f){ return s + (Number(f.amount) || 0); }, 0);
+}
+
+function getFundDisplayAmount(fund){
+  var liveAmount = Number(fund && fund.liveAmount);
+  return Number.isFinite(liveAmount) ? liveAmount : (Number(fund && fund.amount) || 0);
+}
+
+function getFundDisplayYesterday(fund){
+  var liveYesterday = Number(fund && fund.liveYesterday);
+  return Number.isFinite(liveYesterday) ? liveYesterday : (Number(fund && fund.yesterday) || 0);
+}
+
+function getFundDisplayRate(fund){
+  var liveRate = Number(fund && fund.liveRate);
+  return Number.isFinite(liveRate) ? liveRate : (Number(fund && fund.rate) || 0);
+}
+
+function syncCurrentAccountMarketSummary(){
+  var acct = accounts[currentAccountId];
+  if(!acct) return;
+  var total = funds.reduce(function(s,f){ return s + getFundDisplayAmount(f); }, 0);
+  var holdProfit = funds.reduce(function(s,f){ return s + (Number(f.hold) || 0); }, 0);
+  acct.totalAsset = total;
+  acct.holdProfit = holdProfit;
+  acct.holdRate = total > 0 ? holdProfit / Math.max(total - holdProfit, 1) * 100 : 0;
+  acct.fundCount = funds.length;
+  acct.lastUpdate = new Date().toISOString().slice(0, 10);
+}
+
+function renderTop3(){
+  var list = document.getElementById('top3List');
+  if(!list) return;
+  var topFunds = funds.slice()
+    .sort(function(a,b){ return getFundDisplayYesterday(b) - getFundDisplayYesterday(a); })
+    .slice(0, 3);
+  if(!topFunds.length){
+    list.innerHTML = '<div class="top3-item"><div class="top3-name">暂无持仓数据</div><div class="top3-val">¥0.00</div><div class="top3-sub">等待导入或同步</div></div>';
+    return;
+  }
+  list.innerHTML = topFunds.map(function(f){
+    var profit = getFundDisplayYesterday(f);
+    var amount = getFundDisplayAmount(f);
+    var rate = amount > 0 ? profit / amount * 100 : getFundDisplayRate(f);
+    var cls = profit >= 0 ? 'red' : 'green';
+    var sourceText = f.liveSource ? ' · ' + escapeHtml(f.liveSource) : '';
+    return '<div class="top3-item">' +
+      '<div class="top3-name" title="' + escapeHtml(f.name) + '">' + escapeHtml(f.name) + '</div>' +
+      '<div class="top3-val ' + cls + '">' + (profit >= 0 ? '+' : '-') + formatYuan(Math.abs(profit), 2) + '</div>' +
+      '<div class="top3-sub">持仓 ' + formatYuan(amount, 0) + ' ｜ 收益率 ' + (rate >= 0 ? '+' : '') + rate.toFixed(2) + '%' + sourceText + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function refreshOverviewFromFunds(){
+  updateKPIs();
+  renderTop3();
+  if(document.getElementById('holdingsBody')) renderHoldings();
+  updateAccountSummaryUI();
+}
+
+function applyMarketEstimatesToOverview(estimates){
+  if(!Array.isArray(estimates) || !estimates.length) return false;
+  var applied = 0;
+  estimates.forEach(function(est){
+    if(!est) return;
+    var fund = funds.find(function(f){
+      return (est.code && f.code === est.code) || (est.name && f.name === est.name);
+    });
+    if(!fund) return;
+    var estProfit = Number(est.estProfit);
+    var estAmount = Number(est.estAmount);
+    if(Number.isFinite(estProfit)) fund.liveYesterday = estProfit;
+    if(Number.isFinite(estAmount)) fund.liveAmount = estAmount;
+    if(Number.isFinite(Number(est.indexChangePct))) fund.liveRate = Number(est.indexChangePct);
+    fund.liveSource = est.source || est.indexName || '实时估算';
+    fund.liveTime = est.indexTime || estimates._latestTime || new Date().toISOString();
+    applied++;
+  });
+  if(applied > 0){
+    syncCurrentAccountMarketSummary();
+    refreshOverviewFromFunds();
+  }
+  return applied > 0;
+}
+
 // ===== P1-2: KPI 卡片动态更新 =====
 function updateKPIs(){
-  // 从 funds 数组动态计算
-  var total = funds.reduce(function(s,f){ return s + f.amount; }, 0);
-  var yesterdayProfit = funds.reduce(function(s,f){ return s + (f.yesterday || 0); }, 0);
+  // 从 funds 数组动态计算，实时估算优先，静态持仓兜底
+  var total = funds.reduce(function(s,f){ return s + getFundDisplayAmount(f); }, 0);
+  var yesterdayProfit = funds.reduce(function(s,f){ return s + getFundDisplayYesterday(f); }, 0);
   var holdProfit = funds.reduce(function(s,f){ return s + (f.hold || 0); }, 0);
   var yesterdayPct = total > 0 ? (yesterdayProfit / (total - yesterdayProfit) * 100) : 0;
   var holdPct = total > 0 ? (holdProfit / (total - holdProfit) * 100) : 0;
+  totalAsset = total;
 
   var el;
-  if((el = document.getElementById('kpiTotal'))) el.textContent = '¥' + total.toLocaleString('zh-CN', {minimumFractionDigits:0, maximumFractionDigits:0});
-  if((el = document.getElementById('kpiTotalSub'))) el.innerHTML = '<span class="' + (holdProfit >= 0 ? 'green' : 'red') + '">较初始 ' + (holdProfit >= 0 ? '+' : '') + '¥' + Math.abs(holdProfit).toFixed(0) + '</span>';
+  if((el = document.getElementById('kpiTotal'))) el.textContent = formatYuan(total, 0);
+  if((el = document.getElementById('kpiTotalSub'))) el.innerHTML = '<span class="' + (holdProfit >= 0 ? 'green' : 'red') + '">较初始 ' + (holdProfit >= 0 ? '+' : '-') + formatYuan(Math.abs(holdProfit), 0) + '</span>';
   if((el = document.getElementById('kpiYesterday'))){
-    el.textContent = (yesterdayProfit >= 0 ? '+' : '') + '¥' + Math.abs(yesterdayProfit).toFixed(2);
+    el.textContent = (yesterdayProfit >= 0 ? '+' : '-') + formatYuan(Math.abs(yesterdayProfit), 2);
     el.className = 'kpi-value ' + (yesterdayProfit >= 0 ? 'red' : 'green');
   }
   if((el = document.getElementById('kpiYesterdayPct'))){
@@ -2503,7 +2615,7 @@ function updateKPIs(){
     el.className = 'kpi-sub ' + (yesterdayPct >= 0 ? 'red' : 'green');
   }
   if((el = document.getElementById('kpiHoldProfit'))){
-    el.textContent = (holdProfit >= 0 ? '+' : '') + '¥' + Math.abs(holdProfit).toFixed(2);
+    el.textContent = (holdProfit >= 0 ? '+' : '-') + formatYuan(Math.abs(holdProfit), 2);
     el.className = 'kpi-value ' + (holdProfit >= 0 ? 'green' : 'red');
   }
   if((el = document.getElementById('kpiHoldRate'))){
@@ -2513,10 +2625,10 @@ function updateKPIs(){
   // 累计收益 = 持有收益 + 已实现收益（从 trades 计算）
   var realizedProfit = trades.filter(function(t){ return t.type === '赎回'; }).reduce(function(s,t){ return s + (t.profit || 0); }, 0);
   var totalProfit = holdProfit + realizedProfit;
-  if((el = document.getElementById('kpiTotalProfit'))) el.textContent = (totalProfit >= 0 ? '+' : '') + '¥' + Math.abs(totalProfit).toFixed(2);
+  if((el = document.getElementById('kpiTotalProfit'))) el.textContent = (totalProfit >= 0 ? '+' : '-') + formatYuan(Math.abs(totalProfit), 2);
   // 已披露收益
   if((el = document.getElementById('kpiEstProfit'))){
-    el.textContent = (yesterdayProfit >= 0 ? '+' : '') + '¥' + Math.abs(yesterdayProfit).toFixed(2);
+    el.textContent = (yesterdayProfit >= 0 ? '+' : '-') + formatYuan(Math.abs(yesterdayProfit), 2);
     el.className = 'kpi-value ' + (yesterdayProfit >= 0 ? 'red' : 'green');
   }
 }
@@ -2705,21 +2817,29 @@ function switchStyle(style){
 // ===== 渲染持仓明细 =====
 function renderHoldings(){
   const pct = (amt) => totalAsset > 0 ? (amt/totalAsset*100).toFixed(1) : '0.0';
-  document.getElementById('holdingsBody').innerHTML = funds.map(f=>`
+  document.getElementById('holdingsBody').innerHTML = funds.map(f=>{
+    const amount = getFundDisplayAmount(f);
+    const yesterday = getFundDisplayYesterday(f);
+    const rate = getFundDisplayRate(f);
+    return `
     <tr>
-      <td>${f.name}</td>
+      <td>${escapeHtml(f.name)}</td>
       <td><span class="tag ${typeTagClass[f.type]}">${typeLabel[f.type]}</span></td>
       <td class="gray">${f.share.toFixed(2)}</td>
-      <td>¥${f.amount.toFixed(2)}</td>
-      <td>${pct(f.amount)}%</td>
-      <td class="red">${f.yesterday>0?'+'+f.yesterday.toFixed(2):'—'}</td>
+      <td>${formatYuan(amount, 2)}</td>
+      <td>${pct(amount)}%</td>
+      <td class="${yesterday>=0?'red':'green'}">${yesterday!==0?(yesterday>0?'+':'')+yesterday.toFixed(2):'—'}</td>
       <td class="red">${f.hold>0?'+'+f.hold.toFixed(2):'—'}</td>
-      <td class="red">${f.rate>0?'+'+f.rate.toFixed(2)+'%':'—'}</td>
-    </tr>`).join('');
+      <td class="${rate>=0?'red':'green'}">${rate!==0?(rate>0?'+':'')+rate.toFixed(2)+'%':'—'}</td>
+    </tr>`;
+  }).join('');
   ['mixed','index','stock'].forEach(t=>{
     const bodyId = t==='mixed'?'mixedBody':t==='index'?'indexBody':'stockBody';
-    document.getElementById(bodyId).innerHTML = funds.filter(f=>f.type===t).map(f=>
-      `<tr><td>${f.name}</td><td>¥${f.amount.toFixed(2)}</td><td>${pct(f.amount)}%</td><td class="red">+${f.rate.toFixed(2)}%</td></tr>`).join('');
+    document.getElementById(bodyId).innerHTML = funds.filter(f=>f.type===t).map(f=>{
+      const amount = getFundDisplayAmount(f);
+      const rate = getFundDisplayRate(f);
+      return `<tr><td>${escapeHtml(f.name)}</td><td>${formatYuan(amount, 2)}</td><td>${pct(amount)}%</td><td class="${rate>=0?'red':'green'}">${rate>=0?'+':''}${rate.toFixed(2)}%</td></tr>`;
+    }).join('');
   });
 }
 
@@ -3069,6 +3189,7 @@ async function fetchPreMarketEstimates(){ await fetchQDIIPreMarket(); }
 function calculateQDIIEstimate(){
   pmQdiiEstimate = [];
   let totalEstProfit = 0;
+  const baseTotal = getPortfolioBaseTotal();
 
   if (!funds || funds.length === 0) {
     showToast('⚠️ 没有基金持仓数据，无法计算QDII盘前估值', 'error');
@@ -3126,7 +3247,7 @@ function calculateQDIIEstimate(){
 
   // Store total for summary
   pmQdiiEstimate._totalProfit = totalEstProfit;
-  pmQdiiEstimate._totalAsset = totalAsset + totalEstProfit;
+  pmQdiiEstimate._totalAsset = baseTotal + totalEstProfit;
   pmQdiiEstimate._latestTime = Object.values(US_INDEX_MAP).filter(i=>i.time).map(i=>i.time).sort().pop() || '';
 
   // Update index card loading state
@@ -3138,7 +3259,9 @@ function renderQDIIResults(){
   const totalEstProfit = pmQdiiEstimate._totalProfit;
   const newTotal = pmQdiiEstimate._totalAsset;
   const latestTime = pmQdiiEstimate._latestTime;
-  const rateVal = totalAsset > 0 ? (totalEstProfit / totalAsset * 100) : 0;
+  const baseTotal = getPortfolioBaseTotal();
+  const rateVal = baseTotal > 0 ? (totalEstProfit / baseTotal * 100) : 0;
+  applyMarketEstimatesToOverview(pmQdiiEstimate);
 
   // 明细表
   const rows = pmQdiiEstimate.map(f => {
@@ -3183,7 +3306,7 @@ function renderQDIIResults(){
   });
   document.getElementById('pmValTotal').textContent = `¥${newTotal.toFixed(2)}`;
   document.getElementById('pmValTotal').className = 'premarket-result-value ' + dir;
-  document.getElementById('pmSubTotal').textContent = `vs 昨日收盘 ¥${totalAsset.toFixed(2)}`;
+  document.getElementById('pmSubTotal').textContent = `vs 昨日收盘 ¥${baseTotal.toFixed(2)}`;
   document.getElementById('pmValProfit').textContent = totalEstProfit >= 0 ? `+¥${totalEstProfit.toFixed(2)}` : `¥${totalEstProfit.toFixed(2)}`;
   document.getElementById('pmValProfit').className = 'premarket-result-value ' + dir;
   document.getElementById('pmSubProfit').textContent = dir === 'up' ? '↑ 盘前预估盈利' : dir === 'down' ? '↓ 盘前预估亏损' : '— 持平';
@@ -3350,6 +3473,7 @@ function fetchNightIndexData(){
     calcNightEstimate();
   }).catch(() => {
     document.getElementById('nightIdxTime').textContent = '❌ 获取失败，请检查网络';
+    calcNightEstimate();
   });
 }
 
@@ -3358,17 +3482,36 @@ function calcNightEstimate(){
   if (qdiiFunds.length === 0) return;
 
   let totalEst = 0, totalAmount = 0;
-  const rows = qdiiFunds.map(f => {
+  const nightEstimates = qdiiFunds.map(f => {
     const idxKey = Object.keys(US_INDEX_MAP).find(k => US_INDEX_MAP[k].ref === f.ref);
     let changePct = idxKey && US_INDEX_MAP[idxKey].changePct !== 0
       ? US_INDEX_MAP[idxKey].changePct : (f.estChange || 0);
     const estProfit = f.amount * changePct / 100;
     totalEst += estProfit; totalAmount += f.amount;
     const idxName = idxKey ? US_INDEX_MAP[idxKey].label : (f.ref || '--');
+    const idxTime = idxKey ? US_INDEX_MAP[idxKey].time : '';
+    return Object.assign({}, f, {
+      indexChangePct: changePct,
+      indexName: idxName,
+      indexTime: idxTime,
+      source: idxKey ? '美股指数' : '历史数据',
+      estProfit: estProfit,
+      estAmount: f.amount + estProfit
+    });
+  });
+  nightEstimates._totalProfit = totalEst;
+  nightEstimates._totalAsset = getPortfolioBaseTotal() + totalEst;
+  nightEstimates._latestTime = Object.values(US_INDEX_MAP).filter(i=>i.time).map(i=>i.time).sort().pop() || '';
+  applyMarketEstimatesToOverview(nightEstimates);
+
+  const rows = nightEstimates.map(f => {
+    const changePct = f.indexChangePct || 0;
+    const estProfit = f.estProfit || 0;
+    const idxName = f.indexName || f.ref || '--';
     const sign = changePct >= 0 ? '+' : '';
     const profitSign = estProfit >= 0 ? '+' : '';
     return `<tr>
-      <td style="font-weight:600;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</td>
+      <td style="font-weight:600;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(f.name)}</td>
       <td style="font-size:11px;color:#3b82f6">${idxName}</td>
       <td style="font-weight:600;color:${changePct>=0?'#dc2626':'#16a34a'}">${sign}${changePct.toFixed(2)}%</td>
       <td>¥${f.amount.toFixed(2)}</td>
@@ -3425,6 +3568,7 @@ document.addEventListener('DOMContentLoaded', function() {
       setTimeout(fetchAsiaIndexData, 600);
     }
   };
+  setTimeout(fetchNightIndexData, 1200);
 });
 
 // ===== 🌏 获取亚盘指数数据 =====
@@ -4365,6 +4509,7 @@ function switchAccount(id){
   updateScenarioChart();
   renderAIPredictions();
   updateKPIs(); // P1-2: 统一调用动态 KPI 更新
+  renderTop3();
 
   // Update goal inputs if they exist (使用新的多目标系统)
   const inputTarget = document.getElementById('inputTarget');
@@ -5121,6 +5266,7 @@ function refreshAfterOcrImport(){
   renderStyleCompare();
   renderAIPredictions();
   updateKPIs();
+  renderTop3();
   updateAccountSummaryUI();
 }
 

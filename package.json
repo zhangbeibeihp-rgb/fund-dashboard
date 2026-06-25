@@ -9,6 +9,7 @@
     "test:modules": "node tests/module-split.test.mjs",
     "check:js": "node --check api/ocr-parser.mjs && node --check api/health.js && node --check api/client-log.js && node --check src/config.js && node --check src/supabase.js && node --check src/auth.js && node --check src/data-layer.js && node --check src/realtime.js && node --check src/ocr-client.js && node --check src/sync.js && node --check src/mobile-dashboard.js && node --check src/app-init.js && node --check sw.js",
     "test:mobile-ui": "node tests/mobile-ui.test.mjs",
-    "test:pc-ui": "node tests/pc-ui-structure.test.mjs"
+    "test:pc-ui": "node tests/pc-ui-structure.test.mjs",
+    "test:live-refresh": "node tests/live-market-refresh.test.mjs"
   }
 }
