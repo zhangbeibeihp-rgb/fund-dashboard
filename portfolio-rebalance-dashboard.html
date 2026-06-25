@@ -2343,6 +2343,33 @@ const defaultFunds = [
   {name:'嘉实美国成长股票(QDII)人民币',code:'000043',type:'stock',market:'us',amount:50.48,yesterday:1.01,hold:0.48,rate:0.96,share:12.83,nav:3.9350,ref:'罗素1000成长',estChange:1.7,navDate:'2026-06-22(美东周一)',navLag:'T+2',navStatus:'预估待披露'}
 ];
 let funds = defaultFunds;
+
+// P0: 持仓数据持久化
+var STORAGE_FUNDS_KEY = 'fund_holdings';
+function loadFundsData(){
+  try {
+    var saved = localStorage.getItem(STORAGE_FUNDS_KEY);
+    if(saved){
+      var parsed = JSON.parse(saved);
+      if(Array.isArray(parsed) && parsed.length > 0){
+        funds = parsed;
+        return true;
+      }
+    }
+  } catch(e){ console.warn('[Funds] localStorage 加载失败，使用默认数据'); }
+  return false;
+}
+function saveFundsData(){
+  try {
+    localStorage.setItem(STORAGE_FUNDS_KEY, JSON.stringify(funds));
+    // 自动同步到当前账号的 fundsData
+    if(accounts[currentAccountId]){
+      accounts[currentAccountId].fundsData = funds;
+    }
+    // 也尝试保存到 Supabase（如果已登录）
+    if(typeof syncFundsToCloud === 'function') syncFundsToCloud();
+  } catch(e){ console.warn('[Funds] localStorage 保存失败'); }
+}
 let totalAsset = 10920.20;
 const defaultTrades = [
   {date:'2026-06-15',fund:'华夏全球科技先锋混合(QDII)A',type:'申购',ftype:'mixed',amount:2000,share:1085.74,nav:1.8421,status:'已确认'},
@@ -4456,7 +4483,14 @@ function switchAccount(id){
   document.getElementById('camUpdate').textContent = '更新于 '+acct.lastUpdate;
 
   // ===== 加载账号专属持仓数据 =====
-  funds = acct.fundsData || [];
+  if(!acct.fundsData || acct.fundsData.length === 0){
+    // 如果账号没有持仓数据，尝试从 localStorage 加载
+    if(!loadFundsData()){
+      funds = defaultFunds;
+    }
+  } else {
+    funds = acct.fundsData;
+  }
   trades = acct.tradesData || [];
   totalAsset = acct.totalAsset || 0;
 
@@ -4491,6 +4525,7 @@ function switchAccount(id){
 
   saveGoals();
   updateGoal();
+  saveFundsData();     // P0: 切换账号后保存持仓数据
 }
 
 function showAddAccount(){
@@ -4824,6 +4859,7 @@ function confirmAddGoal(){
 
 // ===== 初始化 =====
 loadGoals();              // 从 localStorage 加载目标
+loadFundsData();          // P0: 从 localStorage 加载持仓数据
 createCharts();
 renderHoldings();
 renderRebalance();
@@ -4837,6 +4873,7 @@ updateGoal();
 renderFundPool();
 renderAIPredictions();
 switchAccount(0);
+saveFundsData();          // P0: 初始化后保存当前数据状态
 
 // ===== PWA Service Worker 注册（外部文件版）=====
 (function registerSW() {
