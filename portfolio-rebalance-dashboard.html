@@ -2600,6 +2600,10 @@ function updateKPIs(){
   var holdPct = total > 0 ? (holdProfit / (total - holdProfit) * 100) : 0;
   totalAsset = total;
 
+  // P2: 计算已确认的昨日收益（不含实时估算）
+  var confirmedYesterday = funds.reduce(function(s,f){ return s + (Number(f.yesterday) || 0); }, 0);
+  var hasLiveData = funds.some(function(f){ return typeof f.liveYesterday === 'number' && Number.isFinite(f.liveYesterday); });
+
   var el;
   if((el = document.getElementById('kpiTotal'))) el.textContent = formatYuan(total, 0);
   if((el = document.getElementById('kpiTotalSub'))) el.innerHTML = '<span class="' + (holdProfit >= 0 ? 'green' : 'red') + '">较初始 ' + (holdProfit >= 0 ? '+' : '-') + formatYuan(Math.abs(holdProfit), 0) + '</span>';
@@ -2608,8 +2612,16 @@ function updateKPIs(){
     el.className = 'kpi-value ' + (yesterdayProfit >= 0 ? 'red' : 'green');
   }
   if((el = document.getElementById('kpiYesterdayPct'))){
-    el.textContent = (yesterdayPct >= 0 ? '+' : '') + yesterdayPct.toFixed(2) + '%';
-    el.className = 'kpi-sub ' + (yesterdayPct >= 0 ? 'red' : 'green');
+    // P2: 如果有实时估算数据，显示对比
+    if(hasLiveData && Math.abs(yesterdayProfit - confirmedYesterday) > 0.01){
+      var diffEst = yesterdayProfit - confirmedYesterday;
+      var diffSign = diffEst >= 0 ? '+' : '';
+      el.innerHTML = '<span class="' + (yesterdayPct >= 0 ? 'red' : 'green') + '">' + (yesterdayPct >= 0 ? '+' : '') + yesterdayPct.toFixed(2) + '%</span>'
+        + '<span style="font-size:10px;color:#a855f7;margin-left:6px">⚡估算 ' + diffSign + formatYuan(diffEst, 2) + '</span>';
+    } else {
+      el.textContent = (yesterdayPct >= 0 ? '+' : '') + yesterdayPct.toFixed(2) + '%';
+      el.className = 'kpi-sub ' + (yesterdayPct >= 0 ? 'red' : 'green');
+    }
   }
   if((el = document.getElementById('kpiHoldProfit'))){
     el.textContent = (holdProfit >= 0 ? '+' : '-') + formatYuan(Math.abs(holdProfit), 2);
@@ -2627,6 +2639,17 @@ function updateKPIs(){
   if((el = document.getElementById('kpiEstProfit'))){
     el.textContent = (yesterdayProfit >= 0 ? '+' : '-') + formatYuan(Math.abs(yesterdayProfit), 2);
     el.className = 'kpi-value ' + (yesterdayProfit >= 0 ? 'red' : 'green');
+  }
+
+  // P2: 如果有实时估算，更新总资产 KPI 的对比提示
+  if((el = document.getElementById('kpiTotalSub')) && hasLiveData){
+    var estTotal = funds.reduce(function(s,f){
+      var liveAmount = Number(f && f.liveAmount);
+      return s + (Number.isFinite(liveAmount) ? liveAmount : (Number(f.amount) || 0));
+    }, 0);
+    if(Math.abs(estTotal - total) > 0.5){
+      el.innerHTML += ' <span style="font-size:10px;color:#a855f7">⚡预估¥' + estTotal.toFixed(0) + '</span>';
+    }
   }
 }
 
