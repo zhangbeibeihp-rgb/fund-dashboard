@@ -327,6 +327,9 @@ body{
 .kpi-sub{font-size:11px;color:var(--clr-gray-500);margin-top:3px}
 .kpi-sub.red{color:var(--clr-error);font-weight:600}
 .kpi-sub.green{color:var(--clr-success);font-weight:600}
+.kpi-status{display:inline-block;font-size:10px;padding:1px 6px;border-radius:var(--radius-xs);margin-top:2px;font-weight:500;line-height:1.6}
+.kpi-status.confirmed{background:var(--clr-success-bg);color:var(--clr-success)}
+.kpi-status.estimated{background:var(--clr-purple-bg);color:#a855f7}
 
 /* ===== 通用卡片 ===== */
 .section-title{font-size:15px;font-weight:700;color:var(--clr-gray-700);margin:var(--space-5) 0 var(--space-3);padding-left:10px;border-left:3px solid var(--clr-primary-500)}
@@ -900,31 +903,37 @@ li{margin-bottom:2px}
         <div class="kpi-label">总资产</div>
         <div class="kpi-value" id="kpiTotal">¥10,920</div>
         <div class="kpi-sub green" id="kpiTotalSub">较初始 +¥420</div>
+        <span class="kpi-status confirmed" id="kpiStatusTotal">已确认 ✓</span>
       </div>
       <div class="kpi-card" onclick="showSection('estimate')">
         <div class="kpi-label">昨日收益</div>
         <div class="kpi-value red" id="kpiYesterday">+¥376.87</div>
         <div class="kpi-sub red" id="kpiYesterdayPct">+3.45%</div>
+        <span class="kpi-status confirmed" id="kpiStatusYesterday">已确认 ✓</span>
       </div>
       <div class="kpi-card" onclick="showSection('holdings')">
         <div class="kpi-label">持有收益</div>
         <div class="kpi-value green" id="kpiHoldProfit">+¥736.90</div>
         <div class="kpi-sub green" id="kpiHoldRate">+7.23%</div>
+        <span class="kpi-status confirmed" id="kpiStatusHold">已确认 ✓</span>
       </div>
       <div class="kpi-card" onclick="showSection('trades')">
         <div class="kpi-label">累计收益</div>
         <div class="kpi-value orange" id="kpiTotalProfit">+¥1,614.34</div>
         <div class="kpi-sub">含已实现收益</div>
+        <span class="kpi-status confirmed" id="kpiStatusTotal">已确认 ✓</span>
       </div>
       <div class="kpi-card" onclick="showSection('estimate')" id="kpiEstimateCard" style="border-top-color:#d946ef">
         <div class="kpi-label" id="kpiEstLabel">💫 今晚QDII预估</div>
         <div class="kpi-value" style="color:#a855f7" id="kpiQdiiEst">计算中…</div>
         <div class="kpi-sub" id="kpiQdiiSub">开市后自动计算</div>
+        <span class="kpi-status estimated" id="kpiStatusEst">预估 ⚡</span>
       </div>
       <div class="kpi-card" onclick="showSection('goal')">
         <div class="kpi-label">目标进度</div>
         <div class="kpi-value" style="color:#8b5cf6;" id="kpiGoalPct">0.38%</div>
         <div class="kpi-sub" id="kpiGoalSub">¥1.09万 / ¥285万 · 点击设置</div>
+        <span class="kpi-status confirmed" id="kpiStatusGoal">系统计算 ✓</span>
       </div>
     </div>
 
@@ -3515,8 +3524,11 @@ function calcNightEstimate(){
   const rate = totalAmount > 0 ? totalEst / totalAmount * 100 : 0;
   const kpiEl = document.getElementById('kpiQdiiEst');
   const kpiSub = document.getElementById('kpiQdiiSub');
-  if (kpiEl) { kpiEl.textContent = `${totalEst>=0?'+':''}¥${Math.abs(totalEst).toFixed(2)}`; kpiEl.style.color = totalEst >= 0 ? '#a855f7' : '#16a34a'; }
-  if (kpiSub) kpiSub.textContent = `${rate>=0?'+':''}${rate.toFixed(2)}% · ${qdiiFunds.length}支QDII`;
+  if(kpiEl){ kpiEl.textContent = `${totalEst>=0?'+':''}¥${Math.abs(totalEst).toFixed(2)}`; kpiEl.style.color = totalEst >= 0 ? '#a855f7' : '#16a34a'; }
+  if(kpiSub) kpiSub.textContent = `${rate>=0?'+':''}${rate.toFixed(2)}% · ${qdiiFunds.length}支QDII`;
+  // P1: 更新预估状态标签
+  var kpiStatus = document.getElementById('kpiStatusEst');
+  if(kpiStatus) kpiStatus.textContent = '已计算 ⚡';
 }
 
 // ===== 自动刷新 =====
